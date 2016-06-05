@@ -37,6 +37,10 @@ end
 project "Varibeat" do
 	kind "WindowedApp"
 	language "C++"
+	if os.get() ~= "Windows" then
+		-- We only want caps on Windows.
+		targetname "varibeat"
+	end
 	local VBEAT_DIR = path.join(BASE_DIR, "src")
 
 	links {

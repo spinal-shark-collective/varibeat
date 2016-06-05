@@ -58,7 +58,7 @@ struct game_state {
 uint32_t debug_flags = 0
 #ifdef VBEAT_DEBUG
 	| BGFX_DEBUG_TEXT
-	//| BGFX_DEBUG_STATS
+	// | BGFX_DEBUG_STATS
 #endif
 	;
 uint32_t reset_flags = 0
@@ -81,6 +81,14 @@ const auto handle_events = [](game_state &gs) {
 			case SDL_KEYUP: {
 				if (e.key.keysym.sym == SDLK_ESCAPE) {
 					gs.queue_quit = true;
+				}
+				if (e.key.keysym.sym == SDLK_1) {
+					debug_flags ^= BGFX_DEBUG_STATS;
+					bgfx::setDebug(debug_flags);
+				}
+				if (e.key.keysym.sym == SDLK_2) {
+					debug_flags ^= BGFX_DEBUG_WIREFRAME;
+					bgfx::setDebug(debug_flags);
 				}
 				break;
 			}
@@ -156,6 +164,8 @@ struct entity_t {
 	bgfx::TextureHandle      tex;
 	float xform[16];
 };
+
+#include "bitmap_font.hpp"
 
 entity_t *new_sprite(const std::string &filename, float x, float y, bool additive = false) {
 	entity_t *entity = new entity_t();
@@ -241,8 +251,13 @@ int main(int, char **argv) {
 
 	auto sampler = bgfx::createUniform("s_tex_color", bgfx::UniformType::Int1);
 	auto program = bgfx::createProgram(
-		bgfx::createShader(fs::read_mem("shaders/test.vs.bin")),
-		bgfx::createShader(fs::read_mem("shaders/test.fs.bin")),
+		bgfx::createShader(fs::read_mem("shaders/sprite.vs.bin")),
+		bgfx::createShader(fs::read_mem("shaders/sprite.fs.bin")),
+		true
+	);
+	auto dfield = bgfx::createProgram(
+		bgfx::createShader(fs::read_mem("shaders/sprite.vs.bin")),
+		bgfx::createShader(fs::read_mem("shaders/distance-field.fs.bin")),
 		true
 	);
 
@@ -253,8 +268,16 @@ int main(int, char **argv) {
 	entities.push_back(new_sprite("notes_oxygen.png", 50, 40));
 	entities.push_back(new_sprite("laneglow-small_oxygen.png", 50, 75, true));
 
-	float view[16], proj[16];
+	bitmap_font fnt;
+	fnt.load("fonts/helvetica-neue-55.fnt");
+	fnt.set_text(
+		"test text look at me it's\n"
+		"multi-line text"
+	);
+
+	float view[16], proj[16], text[16];
 	bx::mtxIdentity(view);
+	bx::mtxTranslate(text, 200, 200, 0);
 	bx::mtxOrtho(proj, 0.f, gs.width, gs.height, 0.f, -10.f, 10.f);
 	bgfx::setViewTransform(0, view, proj);
 	bgfx::setViewRect(0, 0, 0, gs.width, gs.height);
@@ -278,10 +301,10 @@ int main(int, char **argv) {
 		uint64_t default_state = 0
 			| BGFX_STATE_RGB_WRITE
 			| BGFX_STATE_CULL_CCW
-			| BGFX_STATE_DEPTH_WRITE
 			| BGFX_STATE_DEPTH_TEST_LEQUAL;
 		for (auto &m : entities) {
 			uint64_t state = default_state
+				| BGFX_STATE_DEPTH_WRITE
 				| (m->additive ? BGFX_STATE_BLEND_ADD : BGFX_STATE_BLEND_ALPHA);
 
 			bgfx::setTexture(0, sampler, m->tex);
@@ -291,6 +314,13 @@ int main(int, char **argv) {
 			bgfx::setState(state);
 			bgfx::submit(0, program);
 		}
+
+		bgfx::setTexture(0, sampler, fnt.tex);
+		bgfx::setTransform(text);
+		bgfx::setVertexBuffer(fnt.vbo);
+		bgfx::setIndexBuffer(fnt.ibo);
+		bgfx::setState(default_state | BGFX_STATE_BLEND_ALPHA);
+		bgfx::submit(0, dfield);
 
 		bgfx::frame();
 		bgfx::dbgTextClear();
