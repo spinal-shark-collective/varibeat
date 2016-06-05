@@ -29,7 +29,7 @@ mediump float linearToGammaFast(mediump float c) { return pow(max(c, 0.0), 1.0 /
 mediump vec3 linearToGammaFast(mediump vec3 c) { return pow(max(c, vec3(0.0)), vec3(1.0 / 2.2)); }
 mediump vec4 linearToGammaFast(mediump vec4 c) { return vec4(linearToGammaFast(c.rgb), c.a); }
 
-#ifdef MYON_PRECISE_GAMMA
+#ifdef VBEAT_PRECISE_GAMMA
 #define gammaToLinear gammaToLinearPrecise
 #define linearToGamma linearToGammaPrecise
 #else
@@ -37,7 +37,7 @@ mediump vec4 linearToGammaFast(mediump vec4 c) { return vec4(linearToGammaFast(c
 #define linearToGamma linearToGammaFast
 #endif
 
-#ifdef MYON_GAMMA_CORRECT
+#ifdef VBEAT_GAMMA_CORRECT
 #define gammaCorrectColor gammaToLinear
 #define unGammaCorrectColor linearToGamma
 #define gammaCorrectColorPrecise gammaToLinearPrecise

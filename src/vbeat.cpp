@@ -114,56 +114,105 @@ const auto update = [](game_state &gs) {
 	}
 };
 
-std::vector<video::mesh*> meshes;
-bgfx::ProgramHandle program;
-
 double get_time() {
 	return double(SDL_GetPerformanceCounter()) / SDL_GetPerformanceFrequency();
 }
 
-const auto render = [](game_state &gs) {
-	float x90 = bx::toRad(-90.0f);
-	float fov = bx::toRad(60.0f);
-	float aspect = float(gs.width) / float(gs.height);
+#include "lodepng.h"
 
-	float view[16], rot[16], tmp[16];
-	bx::mtxTranslate(tmp, 0.0f, 2.0f, -1.6f);
-	bx::mtxRotateX(rot, -x90);
-	bx::mtxMul(view, tmp, rot);// rot, tmp);
+void* lodepng_malloc(size_t size) {
+	return bx::alloc(vbeat::get_allocator(), size);
+}
 
-	math::perspective(tmp, aspect, fov);//, 0.01f, true, 1000.0f);
-	bgfx::setViewTransform(0, view, tmp);
-	bgfx::setViewRect(0, 0, 0, gs.width, gs.height);
-	bgfx::setViewScissor(0, 0, 0, gs.width, gs.height);
+void* lodepng_realloc(void* ptr, size_t new_size) {
+	return bx::realloc(vbeat::get_allocator(), ptr, new_size);
+}
 
-	bgfx::touch(0);
+void lodepng_free(void* ptr) {
+	bx::free(vbeat::get_allocator(), ptr);
+}
 
-	float xform[16];
-	float spin = float(get_time() * 0.5);
-	bx::mtxRotateZ(xform, spin);
-
-	bgfx::setViewClear(0,
-		BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
-		0x101010ff,
-		1.0f
-	);
-
-	for (auto &m : meshes) {
-		bgfx::setTransform(xform);
-		bgfx::setVertexBuffer(m->vbo);
-		bgfx::setIndexBuffer(m->ibo);
-		bgfx::setState(0
-			| BGFX_STATE_MSAA
-			| BGFX_STATE_ALPHA_WRITE
-			| BGFX_STATE_RGB_WRITE
-			| BGFX_STATE_CULL_CCW
-			| BGFX_STATE_DEPTH_WRITE
-			| BGFX_STATE_DEPTH_TEST_LEQUAL
-		);
-		bgfx::submit(0, program);
+struct entity_t {
+	entity_t() :
+		loaded(false),
+		additive(false)
+	{
+		bx::mtxIdentity(this->xform);
 	}
-	bgfx::frame();
-	bgfx::dbgTextClear();
+	~entity_t() {
+		if (!this->loaded) {
+			return;
+		}
+		printf("deleted\n");
+		bgfx::destroyVertexBuffer(this->vbo);
+		bgfx::destroyIndexBuffer(this->ibo);
+		bgfx::destroyTexture(this->tex);
+		this->loaded = false;
+	}
+	bool loaded;
+	bool additive;
+	bgfx::VertexBufferHandle vbo;
+	bgfx::IndexBufferHandle  ibo;
+	bgfx::TextureHandle      tex;
+	float xform[16];
+};
+
+entity_t *new_sprite(const std::string &filename, float x, float y, bool additive = false) {
+	entity_t *entity = new entity_t();
+
+	unsigned w, h;
+	std::vector<unsigned char> pixels;
+	std::vector<unsigned char> file_data;
+	fs::read_vector(file_data, filename);
+	unsigned err = lodepng::decode(pixels, w, h, file_data);
+	if (err) {
+		printf("fuck\n");
+		return nullptr;
+	}
+
+	entity->tex = bgfx::createTexture2D(w, h, 0, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(pixels.data(), w*h*4));
+
+	struct vertex_t {
+		float x, y;
+		float u, v;
+	};
+	vertex_t verts[] = {
+		// top left
+		{ 0.f, 0.f,           0.f, 0.f },
+		// top right
+		{ (float)w, 0.f,      1.f, 0.f },
+		// bottom right
+		{ (float)w, (float)h, 1.f, 1.f },
+		// bottom left
+		{ 0.f, (float)h,      0.f, 1.f }
+	};
+
+
+	bgfx::VertexDecl decl;
+	decl.begin()
+		.add(bgfx::Attrib::Position,  2, bgfx::AttribType::Float)
+		.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+		.end();
+	entity->vbo = bgfx::createVertexBuffer(bgfx::copy(verts, sizeof(verts)), decl);
+
+	/*  [0] -----> [1]
+	 *   ^  -\   A  |
+	 *   |    -\    |
+	 *   | B    -\  v
+	 *  [3]<-------[2] */
+	uint16_t indices[] = {
+		0, 1, 2,
+		0, 2, 3
+	};
+
+	entity->ibo = bgfx::createIndexBuffer(bgfx::copy(indices, sizeof(indices)));
+
+	bx::mtxTranslate(entity->xform, bx::fabsolute(x), bx::fabsolute(y), 0);
+	entity->additive = additive;
+
+	entity->loaded = true;
+
+	return entity;
 };
 
 int main(int, char **argv) {
@@ -190,39 +239,67 @@ int main(int, char **argv) {
 	bgfx::reset(gs.width, gs.height, reset_flags);
 	bgfx::setDebug(debug_flags);
 
-	program = bgfx::createProgram(
+	auto sampler = bgfx::createUniform("s_tex_color", bgfx::UniformType::Int1);
+	auto program = bgfx::createProgram(
 		bgfx::createShader(fs::read_mem("shaders/test.vs.bin")),
 		bgfx::createShader(fs::read_mem("shaders/test.fs.bin")),
 		true
 	);
 
-	video::mesh *tmp = new video::mesh();
-	video::read_iqm(*tmp, "models/chair.iqm");
-	meshes.push_back(tmp);
-
-	double lag = 0.0;
-	double peak = 0.0;
 	double last = get_time();
 
-	const double min_framerate = target_framerate / 3.0;
-	const double max_delta = 1.0 / min_framerate;
+	std::vector<entity_t*> entities;
+	entities.push_back(new_sprite("buttons_oxygen.png", 50, 100));
+	entities.push_back(new_sprite("notes_oxygen.png", 50, 40));
+	entities.push_back(new_sprite("laneglow-small_oxygen.png", 50, 75, true));
+
+	float view[16], proj[16];
+	bx::mtxIdentity(view);
+	bx::mtxOrtho(proj, 0.f, gs.width, gs.height, 0.f, -10.f, 10.f);
+	bgfx::setViewTransform(0, view, proj);
+	bgfx::setViewRect(0, 0, 0, gs.width, gs.height);
+	bgfx::setViewScissor(0, 0, 0, gs.width, gs.height);
 
 	while (!gs.finished) {
 		handle_events(gs);
-
-		double now = get_time();
-		double delta = now - last;
-		last = now;
-
 		update(gs);
 
-		// present what we've got.
-		render(gs);
+		double now = get_time();
+		// double delta = now - last;
+		last = now;
+
+		bgfx::touch(0);
+		bgfx::setViewClear(0,
+			BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH,
+			0x080808ff,
+			1.0f
+		);
+
+		uint64_t default_state = 0
+			| BGFX_STATE_RGB_WRITE
+			| BGFX_STATE_CULL_CCW
+			| BGFX_STATE_DEPTH_WRITE
+			| BGFX_STATE_DEPTH_TEST_LEQUAL;
+		for (auto &m : entities) {
+			uint64_t state = default_state
+				| (m->additive ? BGFX_STATE_BLEND_ADD : BGFX_STATE_BLEND_ALPHA);
+
+			bgfx::setTexture(0, sampler, m->tex);
+			bgfx::setTransform(m->xform);
+			bgfx::setVertexBuffer(m->vbo);
+			bgfx::setIndexBuffer(m->ibo);
+			bgfx::setState(state);
+			bgfx::submit(0, program);
+		}
+
+		bgfx::frame();
+		bgfx::dbgTextClear();
 	}
 
-	for (auto &m : meshes) {
-		delete m;
+	for (auto &e : entities) {
+		delete e;
 	}
+
 	bgfx::destroyProgram(program);
 
 	video::close();

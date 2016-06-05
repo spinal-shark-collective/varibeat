@@ -45,6 +45,12 @@ project "Varibeat" do
 		"PhysFS",
 	}
 
+	defines {
+		"LODEPNG_NO_COMPILE_ENCODER",
+		"LODEPNG_NO_COMPILE_DISK",
+		"LODEPNG_NO_COMPILE_ALLOCATORS"
+	}
+
 	configuration {"Debug"}
 	defines {
 		"VBEAT_DEBUG"
