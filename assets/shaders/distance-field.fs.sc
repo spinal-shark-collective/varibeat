@@ -12,9 +12,15 @@ float aastep(float threshold, float dist)
 	return smoothstep(threshold - afwidth, threshold + afwidth, dist);
 }
 
-void main()
-{
-	float dist = texture2D(s_tex_color, v_texcoord0).a;
-	float alpha = aastep(distancethreshold, dist);
-	gl_FragColor = vec4(vec3_splat(1.0), alpha);
+float sample(vec2 offset, float width) {
+	float dist = texture2D(s_tex_color, v_texcoord0 - offset).a;
+	return aastep(distancethreshold - width, dist);
+}
+
+void main() {
+	vec4 out_color = vec4_splat(0.0);
+	out_color += vec4(0.0, 0.0, 0.0, 0.5) * sample(vec2(0.0025, 0.0025), 0.25);
+	out_color += vec4_splat(1.0) * sample(vec2(0.0, 0.0), 0.0);
+
+	gl_FragColor = out_color;
 }
