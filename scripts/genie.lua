@@ -71,12 +71,14 @@ project "Varibeat" do
 		["Sources"] = { "**.c", "**.cpp" }
 	}
 	files {
+		path.join(EXTERN_DIR, "lodepng/lodepng.cpp"),
 		path.join(VBEAT_DIR, "*.cpp"),
 		path.join(VBEAT_DIR, "*.hpp")
 	}
 	includedirs {
 		VBEAT_DIR,
 		EXTERN_DIR,
+		path.join(EXTERN_DIR, "lodepng"),
 		path.join(EXTERN_DIR, "bgfx/include"),
 		path.join(BASE_DIR, "scripts/include"),
 		PHYSFS_DIR,
