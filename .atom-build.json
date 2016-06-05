@@ -1,0 +1,13 @@
+{
+  "name": "run",
+  "cmd": ".\\bin\\Varibeat.exe",
+  "args": [],
+  "sh": false,
+  "cwd": ".\\",
+  "targets": {
+	  "build": {
+		  "cmd": "build.bat",
+		  "sh": false
+	  }
+  }
+}

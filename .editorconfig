@@ -1,0 +1,19 @@
+# editorconfig.org
+root = true
+
+[*.{cpp,hpp,h,lua}]
+charset      = utf-8
+end_of_line  = lf
+indent_style = tab
+insert_final_newline     = true
+trim_trailing_whitespace = true
+# for width-limits we assume 3-width, but you can use whatever you like.
+# indent_size  = 3
+
+[Makefile]
+indent_style = tab
+
+# Why must you torture me so.
+[*.yml]
+indent_style = space
+indent_size = 2

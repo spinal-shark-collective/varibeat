@@ -1,0 +1,22 @@
+# Various build files
+/.clang_complete
+
+# Makefiles (usually POSIX)
+/scripts/*.make
+/scripts/Makefile
+
+# Visual Studio
+/scripts/*.sln
+/scripts/*.vcxproj
+/scripts/*.vcxproj.*
+/scripts/*.VC.*
+/scripts/.vs
+/scripts/*.opensdf
+/scripts/*.sdf
+
+# Bin dirs
+/obj
+/bin
+
+# Copied headers
+/scripts/include

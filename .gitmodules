@@ -1,0 +1,9 @@
+[submodule "extern/bgfx"]
+	path = extern/bgfx
+	url = https://github.com/bkaradzic/bgfx.git
+[submodule "extern/bx"]
+	path = extern/bx
+	url = https://github.com/bkaradzic/bx.git
+[submodule "extern/sdl"]
+	path = extern/sdl
+	url = https://github.com/spurious/SDL-mirror.git

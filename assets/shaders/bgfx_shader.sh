@@ -1,0 +1,1 @@
+../../extern/bgfx/src/bgfx_shader.sh
