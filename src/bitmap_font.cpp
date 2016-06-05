@@ -225,7 +225,9 @@ void bitmap_font::set_text(std::string text) {
 		return;
 	}
 
-	float adv = (float) 1.0/Width; // Font texture atlas spacing.
+	// Font texture atlas spacing.
+	float advx = (float) 1.0 / Width;
+	float advy = (float) 1.0 / Height;
 	char_descriptor *f;
 
 	float x = 0;
@@ -250,26 +252,26 @@ void bitmap_font::set_text(std::string text) {
 		float DstY = CurY + f->Height;
 
 		// 0,1 Texture Coord
-		texlst[i*4].u = adv * f->x;
-		texlst[i*4].v = adv * (f->y + f->Height);
+		texlst[i*4].u = advx * f->x;
+		texlst[i*4].v = advy * (f->y + f->Height);
 		texlst[i*4].x = CurX;
 		texlst[i*4].y = DstY;
 
 		// 1,1 Texture Coord
-		texlst[(i*4)+1].u = adv * (f->x + f->Width);
-		texlst[(i*4)+1].v = adv * (f->y + f->Height);
+		texlst[(i*4)+1].u = advx * (f->x + f->Width);
+		texlst[(i*4)+1].v = advy * (f->y + f->Height);
 		texlst[(i*4)+1].x = DstX;
 		texlst[(i*4)+1].y = DstY;
 
 		// 0,0 Texture Coord
-		texlst[(i*4)+2].u = adv * f->x;
-		texlst[(i*4)+2].v = adv * f->y;
+		texlst[(i*4)+2].u = advx * f->x;
+		texlst[(i*4)+2].v = advy * f->y;
 		texlst[(i*4)+2].x = CurX;
 		texlst[(i*4)+2].y = CurY;
 
 		// 1,0 Texture Coord
-		texlst[(i*4)+3].u = adv * (f->x + f->Width);
-		texlst[(i*4)+3].v = adv * f->y;
+		texlst[(i*4)+3].u = advx * (f->x + f->Width);
+		texlst[(i*4)+3].v = advy * f->y;
 		texlst[(i*4)+3].x = DstX;
 		texlst[(i*4)+3].y = CurY;
 
