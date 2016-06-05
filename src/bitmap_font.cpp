@@ -1,5 +1,7 @@
 #include <string>
+#ifndef VBEAT_WINDOWS
 #include <unistd.h>
+#endif
 #include <iostream>
 #include <sstream>
 #include <fstream>
