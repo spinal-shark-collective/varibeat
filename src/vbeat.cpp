@@ -140,82 +140,99 @@ void lodepng_free(void* ptr) {
 	bx::free(vbeat::get_allocator(), ptr);
 }
 
-struct texture_t {
-	texture_t(bgfx::TextureHandle _tex, unsigned _w, unsigned _h) :
-		tex(_tex),
-		w(_w),
-		h(_h),
-		refs(0)
-	{}
-	~texture_t() {
-		puts("deleting texture");
-		bgfx::destroyTexture(this->tex);
-	}
-	bgfx::TextureHandle tex;
-	unsigned w, h;
-	int refs;
+#include "bitmap_font.hpp"
+#include "texture.hpp"
+
+struct vertex_t {
+	float x, y;
+	float u, v;
 };
 
-struct entity_t {
-	entity_t() :
-		loaded(false),
-		additive(false)
+struct sprite_batch {
+	bool dirty;
+	video::texture_t *texture;
+
+	std::vector<vertex_t> vertices;
+	std::vector<uint16_t> indices;
+
+	bgfx::DynamicVertexBufferHandle vbo;
+	bgfx::DynamicIndexBufferHandle  ibo;
+
+	sprite_batch(video::texture_t *_texture):
+		dirty(true),
+		texture(_texture)
 	{
-		bx::mtxIdentity(this->xform);
+		this->texture->refs++;
+		const int start_vertices = 16;
+		bgfx::VertexDecl decl;
+		decl
+			.begin()
+			.add(bgfx::Attrib::Position,  2, bgfx::AttribType::Float)
+			.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
+			.end();
+		this->vbo = bgfx::createDynamicVertexBuffer(start_vertices, decl, BGFX_BUFFER_ALLOW_RESIZE);
+		this->ibo = bgfx::createDynamicIndexBuffer(start_vertices*3, BGFX_BUFFER_ALLOW_RESIZE);
 	}
-	~entity_t() {
-		if (!this->loaded) {
+
+	virtual ~sprite_batch() {
+		this->texture->refs--;
+		bgfx::destroyDynamicVertexBuffer(this->vbo);
+		bgfx::destroyDynamicIndexBuffer(this->ibo);
+	}
+
+	void buffer() {
+		if (!this->dirty) {
 			return;
 		}
-		tex->refs--;
-		printf("deleted\n");
-		bgfx::destroyVertexBuffer(this->vbo);
-		bgfx::destroyIndexBuffer(this->ibo);
-		this->loaded = false;
+
+		bgfx::updateDynamicVertexBuffer(
+			this->vbo, 0,
+			bgfx::makeRef(
+				this->vertices.data(), this->vertices.size() * sizeof(vertex_t)
+			)
+		);
+
+		bgfx::updateDynamicIndexBuffer(
+			this->ibo, 0,
+			bgfx::makeRef(
+				this->indices.data(), this->indices.size() * sizeof(uint16_t)
+			)
+		);
+
+		this->dirty = false;
 	}
-	bool loaded;
-	bool additive;
-	bgfx::VertexBufferHandle vbo;
-	bgfx::IndexBufferHandle  ibo;
-	texture_t *tex;
-	float xform[16];
+
+	void add(const std::vector<vertex_t> &_vertices, const std::vector<uint16_t> &_indices) {
+		size_t base = this->vertices.size();
+		vertices.reserve(vertices.size() + _vertices.size());
+		indices.reserve(indices.size() + _indices.size());
+		// This, apparently, is the right way to append two vectors.
+		// You may note that it's much more verbose than a simple for...
+		this->vertices.insert(
+			std::end(this->vertices),
+			std::begin(_vertices),
+			std::end(_vertices)
+		);
+		for (auto &i : _indices) {
+			this->indices.push_back(base + i);
+		}
+		this->dirty = true;
+	}
+
+	void clear() {
+		this->dirty = true;
+		vertices.clear();
+		indices.clear();
+	}
 };
 
-#include "bitmap_font.hpp"
-
-std::map<std::string, texture_t*> loaded_textures;
-
-entity_t *new_sprite(const std::string &filename, float x, float y, bool additive = false, float *rect = nullptr) {
-	entity_t *entity = new entity_t();
-
-	texture_t *tex = loaded_textures[filename];
-	if (tex == nullptr) {
-		unsigned w, h;
-		std::vector<unsigned char> pixels;
-		std::vector<unsigned char> file_data;
-		fs::read_vector(file_data, filename);
-		unsigned err = lodepng::decode(pixels, w, h, file_data);
-		if (err) {
-			printf("fuck\n");
-			return nullptr;
-		}
-
-		tex = new texture_t(bgfx::createTexture2D(w, h, 0, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(pixels.data(), w*h*4)), w, h);
-		loaded_textures[filename] = tex;
-	}
-
-	tex->refs++;
-	entity->tex = tex;
-
-	struct vertex_t {
-		float x, y;
-		float u, v;
-	};
-
+void add_sprite(sprite_batch &batch, float x, float y, float *rect = nullptr) {
 	float umin = 0.f;
 	float vmin = 0.f;
 	float umax = 1.f;
 	float vmax = 1.f;
+
+	video::texture_t *tex = batch.texture;
 
 	float w = (float)tex->w;
 	float h = (float)tex->h;
@@ -230,60 +247,23 @@ entity_t *new_sprite(const std::string &filename, float x, float y, bool additiv
 		h = rect[3] - rect[1];
 	}
 
-	vertex_t verts[] = {
-		// top left
-		{ 0.f, 0.f,           umin, vmin },
-		// top right
-		{ (float)w, 0.f,      umax, vmin },
-		// bottom right
-		{ (float)w, (float)h, umax, vmax },
-		// bottom left
-		{ 0.f, (float)h,      umin, vmax }
-	};
-
-	bgfx::VertexDecl decl;
-	decl.begin()
-		.add(bgfx::Attrib::Position,  2, bgfx::AttribType::Float)
-		.add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float)
-		.end();
-	entity->vbo = bgfx::createVertexBuffer(bgfx::copy(verts, sizeof(verts)), decl);
-
 	/*  [0] -----> [1]
-	 *   ^  -\   A  |
-	 *   |    -\    |
-	 *   | B    -\  v
-	 *  [3]<-------[2] */
-	uint16_t indices[] = {
+	*   ^  -\   A  |
+	*   |    -\    |
+	*   | B    -\  v
+	*  [3]<-------[2] */
+	std::vector<vertex_t> verts = {
+		{ 0.f + x, 0.f + y,           umin, vmin }, // top left
+		{ (float)w + x, 0.f + y,      umax, vmin }, // top right
+		{ (float)w + x, (float)h + y, umax, vmax }, // bottom right
+		{ 0.f + x, (float)h + y,      umin, vmax }  // bottom left
+	};
+	std::vector<uint16_t> indices = {
 		0, 1, 2,
 		0, 2, 3
 	};
-
-	entity->ibo = bgfx::createIndexBuffer(bgfx::copy(indices, sizeof(indices)));
-
-	bx::mtxTranslate(entity->xform, bx::fabsolute(x), bx::fabsolute(y), 0);
-	entity->additive = additive;
-
-	entity->loaded = true;
-
-	return entity;
+	batch.add(verts, indices);
 };
-
-#include <stdint.h>
-
-/* The state must be seeded so that it is not everywhere zero. */
-uint64_t s[2] = {
-	0xCBBF7A44,
-	0x0139408D,
-};
-
-double xorshift128plus(void) {
-	uint64_t x = s[0];
-	uint64_t const y = s[1];
-	s[0] = y;
-	x ^= x << 23; // a
-	s[1] = x ^ y ^ (x >> 17) ^ (y >> 26); // b, c
-	return double(s[1] + y) / double(UINT64_MAX);
-}
 
 int main(int, char **argv) {
 	fs::state vfs(argv[0]);
@@ -321,27 +301,23 @@ int main(int, char **argv) {
 		true
 	);
 
-	double last = get_time();
-
-	std::vector<entity_t*> entities;
+	sprite_batch *b = new sprite_batch(video::get_texture("buttons_oxygen.png"));
 	auto receptor = [&](int x, int y, bool alt) {
-		float btn[]  = { alt ? 20.f : 0.f, 0.f,  alt ? 40.f : 20.f, 22.f };
-		float btn2[] = { alt ? 20.f : 0.f, 22.f, alt ? 40.f : 20.f, 44.f };
-		if (xorshift128plus() < 0.5) {
-			entities.push_back(new_sprite("buttons_oxygen.png", x, y, false, btn));
+		if (math::random() < 0.5) {
+			float btn[]  = { alt ? 20.f : 0.f, 0.f, alt ? 40.f : 20.f, 22.f };
+			add_sprite(*b, x, y, btn);
 		} else {
-			entities.push_back(new_sprite("buttons_oxygen.png", x, y, false, btn2));
+			float btn[] = { alt ? 20.f : 0.f, 22.f, alt ? 40.f : 20.f, 44.f };
+			add_sprite(*b, x, y, btn);
 		}
 	};
 
-	int limit = 25;
+	int limit = 7;
 	int spacing = 20;
 	for (int i = 0; i < limit; i++) {
 		receptor(gs.width/2 - (limit/2)*spacing + i * spacing, gs.height - 200 + ((i % 2) ? 0 : 5) , i % 2 == 0);
 	}
-
-	// entities.push_back(new_sprite("notes_oxygen.png", 50, 40));
-	// entities.push_back(new_sprite("laneglow-small_oxygen.png", 50, 75, true));
+	b->buffer();
 
 	bitmap_font *fnt = new bitmap_font;
 	fnt->load("fonts/helvetica-neue-55.fnt");
@@ -358,12 +334,13 @@ int main(int, char **argv) {
 	bgfx::setViewRect(0, 0, 0, gs.width, gs.height);
 	bgfx::setViewScissor(0, 0, 0, gs.width, gs.height);
 
+	double last = get_time();
 	while (!gs.finished) {
 		handle_events(gs);
 		update(gs);
 
 		double now = get_time();
-		// double delta = now - last;
+		double delta = now - last;
 		last = now;
 
 		bgfx::touch(0);
@@ -377,24 +354,24 @@ int main(int, char **argv) {
 			| BGFX_STATE_RGB_WRITE
 			| BGFX_STATE_CULL_CCW
 			| BGFX_STATE_DEPTH_TEST_LEQUAL;
-		for (auto &m : entities) {
-			uint64_t state = default_state
-				| BGFX_STATE_DEPTH_WRITE
-				| (m->additive ? BGFX_STATE_BLEND_ADD : BGFX_STATE_BLEND_ALPHA);
 
-			bgfx::setTexture(0, sampler, m->tex->tex);
-			bgfx::setTransform(m->xform);
-			bgfx::setVertexBuffer(m->vbo);
-			bgfx::setIndexBuffer(m->ibo);
-			bgfx::setState(state);
-			bgfx::submit(0, program);
-		}
+		bgfx::setTexture(0, sampler, b->texture->tex);
+		bgfx::setTransform(view);
+		bgfx::setVertexBuffer(b->vbo);
+		bgfx::setIndexBuffer(b->ibo);
+		bgfx::setState(default_state
+			| BGFX_STATE_DEPTH_WRITE
+			| BGFX_STATE_BLEND_ALPHA
+		);
+		bgfx::submit(0, program);
 
-		bgfx::setTexture(0, sampler, fnt->tex);
+		bgfx::setTexture(0, sampler, fnt->texture->tex);
 		bgfx::setTransform(text);
 		bgfx::setVertexBuffer(fnt->vbo);
 		bgfx::setIndexBuffer(fnt->ibo);
-		bgfx::setState(default_state | BGFX_STATE_BLEND_ALPHA);
+		bgfx::setState(default_state
+			| BGFX_STATE_BLEND_ALPHA
+		);
 		bgfx::submit(0, dfield);
 
 		bgfx::frame();
@@ -402,17 +379,9 @@ int main(int, char **argv) {
 	}
 
 	delete fnt;
+	delete b;
 
-	for (auto &e : entities) {
-		delete e;
-	}
-
-	for (auto &t : loaded_textures) {
-		if (t.second->refs > 0) {
-			puts("/!\\ texture has non-zero refcount! /!\\");
-		}
-		delete t.second;
-	}
+	video::unload_textures();
 
 	bgfx::destroyProgram(program);
 

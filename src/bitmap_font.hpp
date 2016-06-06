@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <bgfx/bgfx.h>
+#include "texture.hpp"
 
 namespace vbeat
 {
@@ -53,7 +54,7 @@ public:
 
 	bgfx::DynamicVertexBufferHandle vbo;
 	bgfx::DynamicIndexBufferHandle  ibo;
-	bgfx::TextureHandle tex;
+	video::texture_t *texture;
 	bool empty;
 
 private:

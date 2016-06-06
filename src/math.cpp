@@ -6,6 +6,26 @@
 namespace vbeat {
 namespace math {
 
+/* The state must be seeded so that it is not everywhere zero. */
+uint64_t s[2] = {
+	0xCBBF7A44,
+	0x0139408D,
+};
+
+void seed(uint64_t hi, uint64_t low) {
+	s[0] = hi;
+	s[1] = low;
+}
+
+double random() {
+	uint64_t x = s[0];
+	uint64_t const y = s[1];
+	s[0] = y;
+	x ^= x << 23; // a
+	s[1] = x ^ y ^ (x >> 17) ^ (y >> 26); // b, c
+	return double(s[1] + y) / double(UINT64_MAX);
+}
+
 void perspective(
 	float *_result, float aspect, float fovy,
 	float zNear, bool infinite, float zFar

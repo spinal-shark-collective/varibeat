@@ -39,7 +39,8 @@ bitmap_font::bitmap_font() :
 }
 
 bitmap_font::~bitmap_font() {
-	bgfx::destroyTexture(this->tex);
+	this->texture->refs--;
+
 	bgfx::destroyDynamicIndexBuffer(this->ibo);
 	bgfx::destroyDynamicVertexBuffer(this->vbo);
 
@@ -197,17 +198,8 @@ bool bitmap_font::load(std::string fontfile) {
 		std::string path = fontfile.substr(0, fontfile.find_last_of("/"));
 		texture_path[i] = path + "/" + texture_path[i];
 
-		unsigned w, h;
-		std::vector<unsigned char> pixels;
-		std::vector<unsigned char> file_data;
-		fs::read_vector(file_data, texture_path[i]);
-		unsigned err = lodepng::decode(pixels, w, h, file_data);
-		if (err) {
-			printf("fuck\n");
-			return false;
-		}
-
-		this->tex = bgfx::createTexture2D(w, h, 0, bgfx::TextureFormat::RGBA8, 0, bgfx::copy(pixels.data(), w*h*4));
+		this->texture = video::get_texture(texture_path[i]);
+		this->texture->refs++;
 
 		// TODO: support n>1 texture maps.
 		break;
