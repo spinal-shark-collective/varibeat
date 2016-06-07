@@ -255,14 +255,19 @@ struct notefield_t : widget_t {
 
 		receptors->buffer();
 
-		// columns is a bitfield.
-		// v---reserved--v
-		// |   notes     |  holds
-		// 0 [ 1 2 3 4 ] 5 [ 6 7 ]
+		/*
+		 * columns is a bitfield.
+		 * 76543210
+		 * ||||||||
+		 * |||||||+-- reserved
+		 * |||++++--- notes
+		 * ||+------- reserved
+		 * ++-------- holds
+		 */
 		enum {
-			NOTE4_MASK = 0x78,
-			NOTE6_MASK = 0xFC,
-			HOLD_MASK  = 0x03
+			NOTE4_MASK = 0x1E,
+			NOTE6_MASK = 0x3F,
+			HOLD_MASK  = 0xC0
 		};
 		#define NOTE(x) 1<<(7-x)
 		note_data = std::vector<note_data_t> {
