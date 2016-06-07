@@ -20,6 +20,9 @@ bx::AllocatorI* vbeat::get_allocator()
 #include "video.hpp"
 #include "mesh.hpp"
 #include "math.hpp"
+#include "bitmap_font.hpp"
+#include "texture.hpp"
+#include "sprite_batch.hpp"
 
 using namespace vbeat;
 
@@ -37,7 +40,9 @@ extern "C" {
 
 #include <stack>
 
-struct input_event_t {};
+struct input_event_t {
+	SDL_Keycode key;
+};
 
 struct widget_t {
 	widget_t *parent;
@@ -89,6 +94,7 @@ struct game_state {
 		tick(other.tick)
 	{}
 	std::stack<screen_t*> screens;
+	std::stack<input_event_t> events;
 	bool queue_quit, finished;
 	int width, height;
 	uint64_t tick;
@@ -116,6 +122,11 @@ const auto handle_events = [](game_state &gs) {
 			case SDL_QUIT: {
 				gs.queue_quit = true;
 				break;
+			}
+			case SDL_KEYDOWN: {
+				input_event_t ie;
+				ie.key = e.key.keysym.sym;
+				gs.events.push(ie);
 			}
 			case SDL_KEYUP: {
 				if (e.key.keysym.sym == SDLK_ESCAPE) {
@@ -146,6 +157,11 @@ const auto handle_events = [](game_state &gs) {
 			}
 		}
 	}
+
+	while (!gs.events.empty()) {
+		gs.screens.top()->input(gs.events.top());
+		gs.events.pop();
+	}
 };
 
 const auto update = [](game_state &gs) {
@@ -155,21 +171,13 @@ const auto update = [](game_state &gs) {
 	}
 };
 
-double get_time() {
-	return double(SDL_GetPerformanceCounter()) / SDL_GetPerformanceFrequency();
-}
-
-#include "bitmap_font.hpp"
-#include "texture.hpp"
-#include "sprite_batch.hpp"
-
-void add_sprite(video::sprite_batch &batch, float x, float y, float *rect = nullptr) {
+void add_sprite(video::sprite_batch *batch, float x, float y, float *rect = nullptr) {
 	float umin = 0.f;
 	float vmin = 0.f;
 	float umax = 1.f;
 	float vmax = 1.f;
 
-	video::texture_t *tex = batch.texture;
+	video::texture_t *tex = batch->texture;
 
 	float w = (float)tex->w;
 	float h = (float)tex->h;
@@ -199,11 +207,12 @@ void add_sprite(video::sprite_batch &batch, float x, float y, float *rect = null
 		0, 1, 2,
 		0, 2, 3
 	};
-	batch.add(verts, indices);
+	batch->add(verts, indices);
 };
 
 struct notefield_t : public widget_t {
-	video::sprite_batch *b;
+	video::sprite_batch *receptors;
+	video::sprite_batch *notes;
 	bgfx::UniformHandle sampler;
 	bgfx::ProgramHandle program;
 
@@ -216,12 +225,14 @@ struct notefield_t : public widget_t {
 			bgfx::createShader(fs::read_mem("shaders/sprite.fs.bin")),
 			true
 		);
-		b = new video::sprite_batch(video::get_texture("buttons_oxygen.png"));
+		receptors = new video::sprite_batch(video::get_texture("buttons_oxygen.png"));
+		notes     = new video::sprite_batch(video::get_texture("notes_oxygen.png"));
 
 		float mbutton[] = { 22.f, 2.f, 38.f, 22.f };
 		// float mbutton[] = { 2.f, 2.f, 22.f, 22.f };
 		float hbutton[] = { 42.f, 2.f, 74.f, 22.f };
 
+		// upper buttons
 		// float max     = 0;
 		float width   = mbutton[2] - mbutton[0];
 		float spacing = 10.f;
@@ -229,43 +240,60 @@ struct notefield_t : public widget_t {
 			float x = (width + spacing) * i;
 			float y = 0.f;
 			// max = x + width;
-			add_sprite(*b, x, y, mbutton);
+			add_sprite(receptors, x, y, mbutton);
 		}
 
+		// lower buttons
 		width   = hbutton[2] - hbutton[0];
 		spacing = 14.f;
 		float offset = 8.0f;
 		for (int i = 0; i < 2; ++i) {
 			float x = (width + spacing) * i + offset;
 			float y = 20.f;
-			add_sprite(*b, x, y, hbutton);
+			add_sprite(receptors, x, y, hbutton);
 		}
 
-		b->buffer();
+		receptors->buffer();
 	}
 
 	virtual ~notefield_t() {
 		bgfx::destroyProgram(program);
 		bgfx::destroyUniform(sampler);
-		delete b;
+		delete receptors;
+		delete notes;
+	}
+
+	void input(const input_event_t &e) {
+		printf("%d\n", e.key);
 	}
 
 	void update(double) {
 		bx::mtxIdentity(xform);
+		notes->clear();
+		// add new notes...
+		notes->buffer();
 	}
 
 	void draw() {
-		bgfx::setTexture(0, sampler, b->texture->tex);
-		bgfx::setTransform(xform);
-		bgfx::setVertexBuffer(b->vbo);
-		bgfx::setIndexBuffer(b->ibo);
-		bgfx::setState(0
+		uint64_t state = 0
 			| BGFX_STATE_RGB_WRITE
 			| BGFX_STATE_CULL_CCW
 			| BGFX_STATE_DEPTH_TEST_LEQUAL
 			| BGFX_STATE_DEPTH_WRITE
-			| BGFX_STATE_BLEND_ALPHA
-		);
+			| BGFX_STATE_BLEND_ALPHA;
+
+		bgfx::setTexture(0, sampler, notes->texture->tex);
+		bgfx::setTransform(xform);
+		bgfx::setVertexBuffer(notes->vbo);
+		bgfx::setIndexBuffer(notes->ibo);
+		bgfx::setState(state);
+		bgfx::submit(0, program);
+
+		bgfx::setTexture(0, sampler, receptors->texture->tex);
+		bgfx::setTransform(xform);
+		bgfx::setVertexBuffer(receptors->vbo);
+		bgfx::setIndexBuffer(receptors->ibo);
+		bgfx::setState(state);
 		bgfx::submit(0, program);
 	}
 };
@@ -314,6 +342,10 @@ struct font_test_t : public widget_t {
 		bgfx::submit(0, dfield);
 	}
 };
+
+double get_time() {
+	return double(SDL_GetPerformanceCounter()) / SDL_GetPerformanceFrequency();
+}
 
 int main(int, char **argv) {
 	fs::state vfs(argv[0]);
