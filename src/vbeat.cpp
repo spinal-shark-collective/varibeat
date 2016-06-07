@@ -259,9 +259,9 @@ struct notefield_t : widget_t {
 		 * columns is a bitfield.
 		 * 76543210
 		 * ||||||||
-		 * |||||||+-- reserved
+		 * |||||||+-- reserved (6key)
 		 * |||++++--- notes
-		 * ||+------- reserved
+		 * ||+------- reserved (6key)
 		 * ++-------- holds
 		 */
 		enum {
