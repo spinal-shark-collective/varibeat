@@ -312,7 +312,7 @@ struct notefield_t : widget_t {
 				continue;
 			}
 			for (uint8_t i = 1; i < 4; ++i) {
-				uint8_t column = (row.columns >> (7-i)) & 0x1;
+				uint8_t column = (row.columns >> i) & 0x1;
 				float x = (width + spacing) * column + x_offset;
 
 				add_sprite(notes, x, y, note_rect);
