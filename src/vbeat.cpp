@@ -388,7 +388,11 @@ int main(int, char **argv) {
 	}
 
 	while (!gs.screens.empty()) {
-		delete gs.screens.top();
+		screen_t *top = gs.screens.top();
+		for (auto &w : top->widgets) {
+			delete w;
+		}
+		delete top;
 		gs.screens.pop();
 	}
 
