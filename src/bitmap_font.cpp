@@ -223,7 +223,7 @@ void bitmap_font_t::set_text(std::string text) {
 	char_descriptor *f;
 
 	float x = 0;
-	float y = LineHeight;
+	float y = float(LineHeight);
 	int line = -1;
 
 	std::vector<vertex_t> texlst(Flen*4);
@@ -236,7 +236,7 @@ void bitmap_font_t::set_text(std::string text) {
 			line++;
 		}
 
-		y = LineHeight * line;
+		y = LineHeight * float(line);
 
 		float CurX = x + f->XOffset;
 		float CurY = y + f->YOffset;

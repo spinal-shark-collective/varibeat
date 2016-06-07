@@ -308,8 +308,8 @@ struct notefield_t : widget_t {
 		float x_offset = -26.0f;
 		float y_offset = -1000.f;
 		for (auto &row : this->note_data) {
-			float y = height - row.ms + time * speed + y_offset;
-			if (y > 0.f) {
+			double y = height - row.ms + time * speed + y_offset;
+			if (y > 0.0) {
 				continue;
 			}
 			for (uint8_t i = 1; i < 5; ++i) {
@@ -318,7 +318,7 @@ struct notefield_t : widget_t {
 					continue;
 				}
 				float x = (width + spacing) * i + x_offset;
-				add_sprite(notes, x, y, note_rect);
+				add_sprite(notes, x, float(y), note_rect);
 			}
 		}
 
@@ -336,14 +336,14 @@ struct notefield_t : widget_t {
 		bgfx::setTexture(0, sampler, notes->texture->tex);
 		bgfx::setTransform(xform);
 		bgfx::setVertexBuffer(notes->vbo);
-		bgfx::setIndexBuffer(notes->ibo);
+		bgfx::setIndexBuffer(notes->ibo, 0, notes->indices.size());
 		bgfx::setState(state);
 		bgfx::submit(0, program);
 
 		bgfx::setTexture(0, sampler, receptors->texture->tex);
 		bgfx::setTransform(xform);
 		bgfx::setVertexBuffer(receptors->vbo);
-		bgfx::setIndexBuffer(receptors->ibo);
+		bgfx::setIndexBuffer(receptors->ibo, 0, receptors->indices.size());
 		bgfx::setState(state);
 		bgfx::submit(0, program);
 	}
@@ -439,7 +439,7 @@ int main(int, char **argv) {
 
 	float view[16], proj[16];
 	bx::mtxIdentity(view);
-	bx::mtxOrtho(proj, 0.f, gs.width, gs.height, 0.f, -10.f, 10.f);
+	bx::mtxOrtho(proj, 0.f, float(gs.width), float(gs.height), 0.f, -10.f, 10.f);
 	bgfx::setViewTransform(0, view, proj);
 	bgfx::setViewRect(0, 0, 0, gs.width, gs.height);
 	bgfx::setViewScissor(0, 0, 0, gs.width, gs.height);

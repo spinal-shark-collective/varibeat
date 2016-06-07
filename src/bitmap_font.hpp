@@ -42,7 +42,7 @@ class bitmap_font_t
 {
 public:
 	bool load(std::string filename);
-	float get_height() { return LineHeight; }
+	int get_height() { return LineHeight; }
 	std::string get_texture_path(int page = 0) { return texture_path[page]; }
 	size_t get_texture_pages() { return texture_path.size(); }
 	float get_string_width(std::string = "");
