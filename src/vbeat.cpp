@@ -269,7 +269,7 @@ struct notefield_t : widget_t {
 			NOTE6_MASK = 0x3F,
 			HOLD_MASK  = 0xC0
 		};
-		#define NOTE(x) 1<<(7-x)
+		#define NOTE(x) 1<<x
 		note_data = std::vector<note_data_t> {
 			{ 100, NOTE(1) | NOTE(4) },
 			{ 250, NOTE(3) },
