@@ -303,18 +303,20 @@ struct notefield_t : widget_t {
 		notes->clear();
 
 		float width    = note_rect[2] - note_rect[0];
-		float spacing  = 14.f;
-		float x_offset = 8.0f;
-		float y_offset = -500.f;
+		float spacing  = 10.f;
+		float x_offset = -100.0f;
+		float y_offset = -1000.f;
 		for (auto &row : this->note_data) {
 			float y = row.ms + time * speed + y_offset;
 			if (y > 0.f) {
 				continue;
 			}
-			for (uint8_t i = 1; i < 4; ++i) {
-				uint8_t column = (row.columns >> i) & 0x1;
-				float x = (width + spacing) * column + x_offset;
-
+			for (uint8_t i = 1; i < 5; ++i) {
+				uint8_t note = (row.columns >> i) & 0x1;
+				if (!note) {
+					continue;
+				}
+				float x = (width + spacing) * i + x_offset;
 				add_sprite(notes, x, y, note_rect);
 			}
 		}
