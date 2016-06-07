@@ -38,7 +38,7 @@ public:
 	{}
 };
 
-class bitmap_font
+class bitmap_font_t
 {
 public:
 	bool load(std::string filename);
@@ -49,8 +49,8 @@ public:
 
 	void set_text(std::string str);
 
-	bitmap_font();
-	~bitmap_font();
+	bitmap_font_t();
+	virtual ~bitmap_font_t();
 
 	bgfx::DynamicVertexBufferHandle vbo;
 	bgfx::DynamicIndexBufferHandle  ibo;

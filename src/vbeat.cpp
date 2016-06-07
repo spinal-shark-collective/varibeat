@@ -56,7 +56,7 @@ struct widget_t {
 	virtual void draw() = 0;
 };
 
-struct screen_t : public widget_t {
+struct screen_t : widget_t {
 	widget_t *focused;
 
 	std::vector<widget_t*> widgets;
@@ -78,15 +78,15 @@ struct screen_t : public widget_t {
 	}
 };
 
-struct game_state {
-	game_state():
+struct game_state_t {
+	game_state_t():
 		queue_quit(false),
 		finished(false),
 		width(0),
 		height(0),
 		tick(0)
 	{}
-	game_state(const game_state &other):
+	game_state_t(const game_state_t &other):
 		queue_quit(other.queue_quit),
 		finished(other.finished),
 		width(other.width),
@@ -103,7 +103,6 @@ struct game_state {
 uint32_t debug_flags = 0
 #ifdef VBEAT_DEBUG
 	| BGFX_DEBUG_TEXT
-	// | BGFX_DEBUG_STATS
 #endif
 	;
 uint32_t reset_flags = 0
@@ -112,10 +111,9 @@ uint32_t reset_flags = 0
 	| BGFX_RESET_SRGB_BACKBUFFER
 	| BGFX_RESET_FLIP_AFTER_RENDER
 	| BGFX_RESET_FLUSH_AFTER_RENDER
-	//| BGFX_RESET_MSAA_X16
 	;
 
-const auto handle_events = [](game_state &gs) {
+const auto handle_events = [](game_state_t &gs) {
 	SDL_Event e;
 	while (SDL_PollEvent(&e)) {
 		switch (e.type) {
@@ -164,7 +162,7 @@ const auto handle_events = [](game_state &gs) {
 	}
 };
 
-void add_sprite(video::sprite_batch *batch, float x, float y, float *rect = nullptr) {
+void add_sprite(video::sprite_batch_t *batch, float x, float y, float *rect = nullptr) {
 	float umin = 0.f;
 	float vmin = 0.f;
 	float umax = 1.f;
@@ -203,15 +201,22 @@ void add_sprite(video::sprite_batch *batch, float x, float y, float *rect = null
 	batch->add(verts, indices);
 };
 
-struct notefield_t : public widget_t {
-	video::sprite_batch *receptors;
-	video::sprite_batch *notes;
+struct notefield_t : widget_t {
+	video::sprite_batch_t *receptors;
+	video::sprite_batch_t *notes;
 	bgfx::UniformHandle sampler;
 	bgfx::ProgramHandle program;
 
 	float xform[16];
 
 	double time;
+
+	struct note_data_t {
+		uint32_t ms;
+		uint8_t  columns;
+	};
+
+	std::vector<note_data_t> note_data;
 
 	void init() {
 		sampler = bgfx::createUniform("s_tex_color", bgfx::UniformType::Int1);
@@ -220,8 +225,8 @@ struct notefield_t : public widget_t {
 			bgfx::createShader(fs::read_mem("shaders/sprite.fs.bin")),
 			true
 		);
-		receptors = new video::sprite_batch(video::get_texture("buttons_oxygen.png"));
-		notes     = new video::sprite_batch(video::get_texture("notes_oxygen.png"));
+		receptors = new video::sprite_batch_t(video::get_texture("buttons_oxygen.png"));
+		notes     = new video::sprite_batch_t(video::get_texture("notes_oxygen.png"));
 
 		static float mbutton[] = { 22.f, 2.f, 38.f, 22.f };
 		// static float mbutton[] = { 2.f, 2.f, 22.f, 22.f };
@@ -250,6 +255,25 @@ struct notefield_t : public widget_t {
 
 		receptors->buffer();
 
+		// columns is a bitfield.
+		// v---reserved--v
+		// |   notes     |  holds
+		// 0 [ 1 2 3 4 ] 5 [ 6 7 ]
+		enum {
+			NOTE4_MASK = 0x78,
+			NOTE6_MASK = 0xFC,
+			HOLD_MASK  = 0x03
+		};
+		#define NOTE(x) 1<<(7-x)
+		note_data = std::vector<note_data_t> {
+			{ 100, NOTE(1) | NOTE(4) },
+			{ 250, NOTE(3) },
+			{ 400, NOTE(2) },
+			{ 550, NOTE(3) | NOTE(2) },
+			{ 700, NOTE(4) }
+		};
+		#undef NOTE
+
 		time = 0;
 	}
 
@@ -268,19 +292,27 @@ struct notefield_t : public widget_t {
 		time += dt;
 
 		float speed = 64*3;
-		static float note[] = { 2.f, 2.f, 22.f, 13.f };
+		static float note_rect[] = { 2.f, 2.f, 22.f, 13.f };
 
 		bx::mtxTranslate(xform, 50, 400, 0);
 		notes->clear();
-		// add new notes...
-		//
-		float x = 0;
-		float y = -20 + time * speed;
-		if (y > 0) {
-			time -= 2.5;
+
+		float width    = note_rect[2] - note_rect[0];
+		float spacing  = 14.f;
+		float x_offset = 8.0f;
+		float y_offset = -500.f;
+		for (auto &row : this->note_data) {
+			float y = row.ms + time * speed + y_offset;
+			if (y > 0.f) {
+				continue;
+			}
+			for (uint8_t i = 1; i < 4; ++i) {
+				uint8_t column = (row.columns >> (7-i)) & 0x1;
+				float x = (width + spacing) * column + x_offset;
+
+				add_sprite(notes, x, y, note_rect);
+			}
 		}
-		add_sprite(notes, x, y, note);
-		add_sprite(notes, x+26, y-30, note);
 
 		notes->buffer();
 	}
@@ -309,10 +341,10 @@ struct notefield_t : public widget_t {
 	}
 };
 
-struct font_test_t : public widget_t {
+struct font_test_t : widget_t {
 	bgfx::UniformHandle sampler;
 	bgfx::ProgramHandle dfield;
-	bitmap_font *fnt;
+	bitmap_font_t *fnt;
 	float text[16];
 
 	virtual ~font_test_t() {
@@ -327,7 +359,7 @@ struct font_test_t : public widget_t {
 			true
 		);
 
-		fnt = new bitmap_font();
+		fnt = new bitmap_font_t();
 		fnt->load("fonts/helvetica-neue-55.fnt");
 		fnt->set_text(
 			"test text look at me it's\n"
@@ -368,7 +400,7 @@ int main(int, char **argv) {
 	SDL_InitSubSystem(SDL_INIT_EVENTS);
 	SDL_InitSubSystem(SDL_INIT_TIMER);
 
-	game_state gs;
+	game_state_t gs;
 
 	std::string title = "Varibeat";
 
@@ -424,7 +456,6 @@ int main(int, char **argv) {
 		);
 
 		auto &s = gs.screens.top();
-
 		s->update(delta);
 		s->draw();
 

@@ -22,7 +22,7 @@ namespace {
 	};
 }
 
-bitmap_font::bitmap_font() :
+bitmap_font_t::bitmap_font_t() :
 	empty(true),
 	KernCount(0),
 	current_text("")
@@ -38,7 +38,7 @@ bitmap_font::bitmap_font() :
 	this->ibo = bgfx::createDynamicIndexBuffer(1, BGFX_BUFFER_ALLOW_RESIZE);
 }
 
-bitmap_font::~bitmap_font() {
+bitmap_font_t::~bitmap_font_t() {
 	this->texture->refs--;
 
 	bgfx::destroyDynamicIndexBuffer(this->ibo);
@@ -48,7 +48,7 @@ bitmap_font::~bitmap_font() {
 	Kern.clear();
 }
 
-bool bitmap_font::parse_font(std::string fontfile) {
+bool bitmap_font_t::parse_font(std::string fontfile) {
 	std::string data;
 	fs::read_string(data, fontfile);
 
@@ -158,7 +158,7 @@ bool bitmap_font::parse_font(std::string fontfile) {
 	return true;
 }
 
-int bitmap_font::get_kerning_pair(int first, int second) {
+int bitmap_font_t::get_kerning_pair(int first, int second) {
 	if (KernCount) {
 		for (int j = 0; j < KernCount; j++) {
 			if (Kern[j].First == first && Kern[j].Second == second)
@@ -168,7 +168,7 @@ int bitmap_font::get_kerning_pair(int first, int second) {
 	return 0;
 }
 
-float bitmap_font::get_string_width(std::string string) {
+float bitmap_font_t::get_string_width(std::string string) {
 	if (string.empty()) string = current_text;
 
 	float total = 0;
@@ -183,7 +183,7 @@ float bitmap_font::get_string_width(std::string string) {
 	return total;
 }
 
-bool bitmap_font::load(std::string fontfile) {
+bool bitmap_font_t::load(std::string fontfile) {
 	if (!fs::is_file(fontfile)) {
 		printf("Couldn't find font: %s\n", fontfile.c_str());
 		return false;
@@ -208,7 +208,7 @@ bool bitmap_font::load(std::string fontfile) {
 	return true;
 }
 
-void bitmap_font::set_text(std::string text) {
+void bitmap_font_t::set_text(std::string text) {
 	int Flen = text.length();
 	current_text = text;
 

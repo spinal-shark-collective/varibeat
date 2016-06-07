@@ -3,7 +3,7 @@
 using namespace vbeat;
 using namespace video;
 
-sprite_batch::sprite_batch(texture_t *_texture):
+sprite_batch_t::sprite_batch_t(texture_t *_texture):
 	dirty(true),
 	texture(_texture)
 {
@@ -19,13 +19,13 @@ sprite_batch::sprite_batch(texture_t *_texture):
 	this->ibo = bgfx::createDynamicIndexBuffer(start_vertices*3, BGFX_BUFFER_ALLOW_RESIZE);
 }
 
-sprite_batch::~sprite_batch() {
+sprite_batch_t::~sprite_batch_t() {
 	this->texture->refs--;
 	bgfx::destroyDynamicVertexBuffer(this->vbo);
 	bgfx::destroyDynamicIndexBuffer(this->ibo);
 }
 
-void sprite_batch::add(const std::vector<vertex_t> &_vertices, const std::vector<uint16_t> &_indices) {
+void sprite_batch_t::add(const std::vector<vertex_t> &_vertices, const std::vector<uint16_t> &_indices) {
 	size_t base = this->vertices.size();
 	vertices.reserve(vertices.size() + _vertices.size());
 	indices.reserve(indices.size() + _indices.size());
@@ -42,7 +42,7 @@ void sprite_batch::add(const std::vector<vertex_t> &_vertices, const std::vector
 	this->dirty = true;
 }
 
-void sprite_batch::buffer() {
+void sprite_batch_t::buffer() {
 	if (!this->dirty) {
 		return;
 	}
@@ -64,7 +64,7 @@ void sprite_batch::buffer() {
 	this->dirty = false;
 }
 
-void sprite_batch::clear() {
+void sprite_batch_t::clear() {
 	this->dirty = true;
 	vertices.clear();
 	indices.clear();
