@@ -164,13 +164,6 @@ const auto handle_events = [](game_state &gs) {
 	}
 };
 
-const auto update = [](game_state &gs) {
-	if (gs.queue_quit) {
-		gs.finished = true;
-		return;
-	}
-};
-
 void add_sprite(video::sprite_batch *batch, float x, float y, float *rect = nullptr) {
 	float umin = 0.f;
 	float vmin = 0.f;
@@ -218,6 +211,8 @@ struct notefield_t : public widget_t {
 
 	float xform[16];
 
+	double time;
+
 	void init() {
 		sampler = bgfx::createUniform("s_tex_color", bgfx::UniformType::Int1);
 		program = bgfx::createProgram(
@@ -228,9 +223,9 @@ struct notefield_t : public widget_t {
 		receptors = new video::sprite_batch(video::get_texture("buttons_oxygen.png"));
 		notes     = new video::sprite_batch(video::get_texture("notes_oxygen.png"));
 
-		float mbutton[] = { 22.f, 2.f, 38.f, 22.f };
-		// float mbutton[] = { 2.f, 2.f, 22.f, 22.f };
-		float hbutton[] = { 42.f, 2.f, 74.f, 22.f };
+		static float mbutton[] = { 22.f, 2.f, 38.f, 22.f };
+		// static float mbutton[] = { 2.f, 2.f, 22.f, 22.f };
+		static float hbutton[] = { 42.f, 2.f, 74.f, 22.f };
 
 		// upper buttons
 		// float max     = 0;
@@ -267,10 +262,24 @@ struct notefield_t : public widget_t {
 		printf("%d\n", e.key);
 	}
 
-	void update(double) {
-		bx::mtxIdentity(xform);
+	void update(double dt) {
+		time += dt;
+
+		float speed = 64*3;
+		static float note[] = { 2.f, 2.f, 22.f, 13.f };
+
+		bx::mtxTranslate(xform, 50, 400, 0);
 		notes->clear();
 		// add new notes...
+		//
+		float x = 0;
+		float y = -20 + time * speed;
+		if (y > 0) {
+			time -= 2.5;
+		}
+		add_sprite(notes, x, y, note);
+		add_sprite(notes, x+26, y-30, note);
+
 		notes->buffer();
 	}
 
@@ -396,7 +405,10 @@ int main(int, char **argv) {
 	double last = get_time();
 	while (!gs.finished) {
 		handle_events(gs);
-		update(gs);
+
+		if (gs.queue_quit) {
+			gs.finished = true;
+		}
 
 		double now = get_time();
 		double delta = now - last;
@@ -411,7 +423,6 @@ int main(int, char **argv) {
 
 		auto &s = gs.screens.top();
 
-		// s->input(e);
 		s->update(delta);
 		s->draw();
 
