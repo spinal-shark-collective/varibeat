@@ -299,15 +299,16 @@ struct notefield_t : widget_t {
 		float speed = 64*3;
 		static float note_rect[] = { 2.f, 2.f, 22.f, 13.f };
 
-		bx::mtxTranslate(xform, 50, 400, 0);
+		bx::mtxTranslate(xform, 50, 650, 0);
 		notes->clear();
 
 		float width    = note_rect[2] - note_rect[0];
-		float spacing  = 10.f;
-		float x_offset = -100.0f;
+		float height   = 600.f;
+		float spacing  = 6.f;
+		float x_offset = -26.0f;
 		float y_offset = -1000.f;
 		for (auto &row : this->note_data) {
-			float y = row.ms + time * speed + y_offset;
+			float y = height - row.ms + time * speed + y_offset;
 			if (y > 0.f) {
 				continue;
 			}

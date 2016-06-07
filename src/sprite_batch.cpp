@@ -54,8 +54,11 @@ void sprite_batch_t::buffer() {
 		)
 	);
 
-	bgfx::updateDynamicIndexBuffer(
-		this->ibo, 0,
+	// FIXME: updating isn't throwing out the old data?
+	bgfx::destroyDynamicIndexBuffer(this->ibo);
+	this->ibo = bgfx::createDynamicIndexBuffer(
+	// bgfx::updateDynamicIndexBuffer(
+	// 	this->ibo, 0,
 		bgfx::makeRef(
 			this->indices.data(), this->indices.size() * sizeof(uint16_t)
 		)
