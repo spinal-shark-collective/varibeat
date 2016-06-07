@@ -249,6 +249,8 @@ struct notefield_t : public widget_t {
 		}
 
 		receptors->buffer();
+
+		time = 0;
 	}
 
 	virtual ~notefield_t() {
