@@ -1,7 +1,22 @@
 #include <map>
+#include <bx/bx.h>
+#include <bx/crtimpl.h>
 #include "lodepng.h"
 #include "texture.hpp"
 #include "fs.hpp"
+#include "vbeat.hpp"
+
+void* lodepng_malloc(size_t size) {
+	return bx::alloc(vbeat::get_allocator(), size);
+}
+
+void* lodepng_realloc(void* ptr, size_t new_size) {
+	return bx::realloc(vbeat::get_allocator(), ptr, new_size);
+}
+
+void lodepng_free(void* ptr) {
+	bx::free(vbeat::get_allocator(), ptr);
+}
 
 using namespace vbeat;
 
