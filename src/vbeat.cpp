@@ -410,6 +410,8 @@ struct font_test_t : widget_t {
 
 	virtual ~font_test_t() {
 		delete fnt;
+		bgfx::destroyProgram(dfield);
+		bgfx::destroyUniform(sampler);
 	}
 
 	void init() {
