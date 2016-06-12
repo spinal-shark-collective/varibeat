@@ -1,5 +1,10 @@
 BX_DIR     = path.join(EXTERN_DIR, "bx/include")
 
+newoption {
+	trigger = "bgfx-debug",
+	description = "Enable BGFX debug logging"
+}
+
 project "BGFX" do
 	targetname "bgfx"
 	uuid "EC77827C-D8AE-830D-819B-69106DB1FF0E"
@@ -41,9 +46,12 @@ project "BGFX" do
 		"BGFX_CONFIG_RENDERER_OPENGL=33"
 	}
 	configuration {"Debug"}
-	defines {
-		"BGFX_CONFIG_DEBUG=1"
-	}
+	if _OPTIONS["bgfx-debug"] then
+		defines {
+			"BGFX_CONFIG_DEBUG=1",
+			"PRIx64=\"\""
+		}
+	end
 	configuration {"vs*"}
 	-- defines {
 	-- 	"BGFX_CONFIG_MULTITHREADED=0"
