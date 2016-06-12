@@ -281,11 +281,11 @@ struct notefield_t : widget_t {
 		};
 		#define NOTE(x) 1<<x
 		note_data = std::vector<note_row_t> {
-			{ 100, NOTE(1) | NOTE(4) },
-			{ 250, NOTE(3) },
-			{ 400, NOTE(2) },
-			{ 550, NOTE(3) | NOTE(2) },
-			{ 700, NOTE(4) }
+			{ 250*2, NOTE(1) | NOTE(4) },
+			{ 400*2, NOTE(3) },
+			{ 550*2, NOTE(2) },
+			{ 700*2, NOTE(3) | NOTE(2) },
+			{ 950*2, NOTE(4) }
 		};
 		#undef NOTE
 
@@ -321,17 +321,15 @@ struct notefield_t : widget_t {
 	void update(double dt) {
 		this->time += dt;
 
-		float speed = 64*3;
+		float speed = 4;
 		static float note_rect[] = { 2.f, 2.f, 22.f, 13.f };
 
 		bx::mtxTranslate(xform, 50, 650, 0);
 		notes->clear();
 
 		float width    = note_rect[2] - note_rect[0];
-		float height   = 600.f;
 		float spacing  = 6.f;
 		float x_offset = -26.0f;
-		float y_offset = 0.f;
 		uint32_t now = uint32_t(this->time * 1000.0);
 
 		for (auto &row : this->note_data) {
@@ -360,7 +358,8 @@ struct notefield_t : widget_t {
 				}
 			}
 
-			double y = height - row.ms + this->time * speed + y_offset;
+			double note_spacing = 32.0;
+			double y = note_spacing * speed * -(double(row.ms) / 1000.0 - this->time);
 			if (y > 0.0) {
 				continue;
 			}

@@ -66,7 +66,10 @@ project "Varibeat" do
 		"pthread",
 		"X11"
 	}
-
+	configuration {"linux", "Debug"}
+	links {
+		"dl"
+	}
 	configuration {"gmake"}
 	buildoptions {
 		"-std=c++11",

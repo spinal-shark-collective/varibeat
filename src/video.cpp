@@ -24,9 +24,6 @@ bool video::open(int w, int h, std::string title) {
 	);
 	bgfx::sdlSetWindow(wnd);
 
-	/* Undocumented: calling renderFrame() before init() locks BGFX to the
-	 * calling thread (forcing it to be single-threaded, reducing latency). */
-	bgfx::renderFrame();
 	if (!bgfx::init(bgfx::RendererType::OpenGL))
 	{
 		printf("Video: Unable to obtain rendering context.\n");

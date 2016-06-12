@@ -3,9 +3,6 @@ BX_DIR     = path.join(EXTERN_DIR, "bx/include")
 project "BGFX" do
 	targetname "bgfx"
 	uuid "EC77827C-D8AE-830D-819B-69106DB1FF0E"
-	if _OPTIONS["force-gl3"] then
-		defines { "BGFX_CONFIG_RENDERER_OPENGL=33" }
-	end
 	kind "StaticLib"
 	language "C++"
 	local BGFX_DIR = path.join(EXTERN_DIR, "bgfx")
@@ -39,6 +36,13 @@ project "BGFX" do
 		path.join(BGFX_SRC_DIR, "shader_dx9bc.cpp"),
 		path.join(BGFX_SRC_DIR, "shader_spirv.cpp"),
 		path.join(BGFX_SRC_DIR, "vertexdecl.cpp")
+	}
+	defines {
+		"BGFX_CONFIG_RENDERER_OPENGL=33"
+	}
+	configuration {"Debug"}
+	defines {
+		"BGFX_CONFIG_DEBUG=1"
 	}
 	configuration {"vs*"}
 	-- defines {
