@@ -49,7 +49,7 @@ project "BGFX" do
 	if _OPTIONS["bgfx-debug"] then
 		defines {
 			"BGFX_CONFIG_DEBUG=1",
-			"PRIx64=\"\""
+			"PRIx64=\"ld\""
 		}
 	end
 	configuration {"vs*"}
