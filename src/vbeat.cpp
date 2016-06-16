@@ -38,6 +38,35 @@ extern "C" {
 }
 #endif // VBEAT_WINDOWS
 
+// c-style allocs... everything that allocates calls these.
+void *vbeat::v_malloc(size_t bytes) {
+	// puts("allocating some shit");
+	bx::alloc(vbeat::get_allocator(), bytes);
+}
+
+void *vbeat::v_realloc(void *ptr, size_t new_size) {
+	return bx::realloc(vbeat::get_allocator(), ptr, new_size);
+}
+
+void vbeat::v_free(void *ptr) {
+	// puts("deallocating some shit");
+	bx::free(vbeat::get_allocator(), ptr);
+}
+
+// c++-style allocs. redirects to v_*
+void* operator new(size_t sz) {
+	void *ptr = vbeat::v_malloc(sz);
+	if (!ptr) {
+		throw std::bad_alloc();
+	}
+	return ptr;
+}
+
+void operator delete(void* ptr) noexcept
+{
+	vbeat::v_free(ptr);
+}
+
 #include <stack>
 
 struct input_event_t {
