@@ -41,7 +41,7 @@ extern "C" {
 // c-style allocs... everything that allocates calls these.
 void *vbeat::v_malloc(size_t bytes) {
 	// puts("allocating some shit");
-	bx::alloc(vbeat::get_allocator(), bytes);
+	return bx::alloc(vbeat::get_allocator(), bytes);
 }
 
 void *vbeat::v_realloc(void *ptr, size_t new_size) {
