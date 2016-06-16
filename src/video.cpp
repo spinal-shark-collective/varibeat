@@ -3,6 +3,7 @@
 #include <SDL2/SDL_syswm.h>
 #include <bgfx/bgfxplatform.h>
 
+#include "vbeat.hpp"
 #include "video.hpp"
 
 using namespace vbeat;
@@ -24,8 +25,11 @@ bool video::open(int w, int h, std::string title) {
 	);
 	bgfx::sdlSetWindow(wnd);
 
-	if (!bgfx::init(bgfx::RendererType::OpenGL))
-	{
+	if (!bgfx::init(
+		bgfx::RendererType::OpenGL,
+		BGFX_PCI_ID_NONE, 0, NULL,
+		vbeat::get_allocator()
+	)) {
 		printf("Video: Unable to obtain rendering context.\n");
 		return false;
 	}
