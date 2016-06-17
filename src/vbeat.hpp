@@ -98,4 +98,4 @@ public:
 };
 
 void* operator new(size_t sz);
-void operator delete(void* ptr) noexcept;
+void operator delete(void* ptr);
