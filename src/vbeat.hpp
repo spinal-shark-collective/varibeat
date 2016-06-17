@@ -9,6 +9,27 @@
 #	define VBEAT_EXPORT
 #endif
 
+// http://stackoverflow.com/a/33298731
+#if !defined(VBEAT_NOEXCEPT)
+#	if defined(__clang__)
+#		if __has_feature(cxx_noexcept)
+#			define HAS_NOEXCEPT
+#		endif
+#	else
+#		 if defined(__GXX_EXPERIMENTAL_CXX0X__) && \
+			__GNUC__ * 10 + __GNUC_MINOR__ >= 46 || \
+			defined(_MSC_FULL_VER) && _MSC_FULL_VER >= 190023026
+#			define HAS_NOEXCEPT
+#		endif
+#	endif
+#	ifdef HAS_NOEXCEPT
+#		undef HAS_NOEXCEPT
+#		define VBEAT_NOEXCEPT noexcept
+#	else
+#		define VBEAT_NOEXCEPT
+#	endif
+#endif
+
 // We want things like size_t everywhere.
 #include <stddef.h>
 
@@ -19,15 +40,10 @@ namespace bx {
 #include <iostream>
 
 namespace vbeat {
-	// fixed 60hz timestep
-	const double target_framerate = 60.0;
-	const double timestep  = 1.0 / target_framerate;
-
 	bx::AllocatorI *get_allocator();
 	void *v_malloc(size_t bytes);
 	void *v_realloc(void *ptr, size_t new_size);
 	void  v_free(void *ptr);
-
 }
 
 // STL allocator, for things that need it.
@@ -98,4 +114,4 @@ public:
 };
 
 void* operator new(size_t sz);
-void operator delete(void* ptr);
+void operator delete(void* ptr) VBEAT_NOEXCEPT;

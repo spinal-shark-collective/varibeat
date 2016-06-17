@@ -62,7 +62,7 @@ void* operator new(size_t sz) {
 	return ptr;
 }
 
-void operator delete(void* ptr)
+void operator delete(void* ptr) VBEAT_NOEXCEPT
 {
 	vbeat::v_free(ptr);
 }
