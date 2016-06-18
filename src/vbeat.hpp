@@ -2,6 +2,9 @@
 
 #define VBEAT_CONFIG_ORG "ssc"
 #define VBEAT_CONFIG_APP "varibeat"
+#ifdef SSC_FUTURES
+#	define VBEAT_CONFIG_VERSION 20170510L
+#endif
 
 #ifdef VBEAT_WINDOWS
 #	define VBEAT_EXPORT __declspec(dllexport)
@@ -30,88 +33,84 @@
 #	endif
 #endif
 
-// We want things like size_t everywhere.
-#include <stddef.h>
+#include <cstddef> // size_t, ...
+#include <memory>  // shared_ptr, ...
+
+void* operator new(size_t sz);
+void operator delete(void* ptr) VBEAT_NOEXCEPT;
 
 namespace bx {
 	struct AllocatorI;
 }
-
-#include <iostream>
 
 namespace vbeat {
 	bx::AllocatorI *get_allocator();
 	void *v_malloc(size_t bytes);
 	void *v_realloc(void *ptr, size_t new_size);
 	void  v_free(void *ptr);
-}
 
-// STL allocator, for things that need it.
-// I'm not sure we need this if we're overriding global operators new & delete.
-template <class T>
-class vbeat_allocator
-{
-public:
-	typedef size_t    size_type;
-	typedef ptrdiff_t difference_type;
-	typedef T*        pointer;
-	typedef const T*  const_pointer;
-	typedef T&        reference;
-	typedef const T&  const_reference;
-	typedef T         value_type;
+	// STL allocator, for things that need it.
+	// I'm not sure we need this if we're overriding global operators new & delete.
+	template <class T>
+	class v_allocator
+	{
+	public:
+		typedef size_t    size_type;
+		typedef ptrdiff_t difference_type;
+		typedef T*        pointer;
+		typedef const T*  const_pointer;
+		typedef T&        reference;
+		typedef const T&  const_reference;
+		typedef T         value_type;
 
-	vbeat_allocator() {}
-	vbeat_allocator(const vbeat_allocator&) {}
+		v_allocator() {}
+		v_allocator(const v_allocator&) {}
 
-	pointer allocate(size_type n, const void * = 0) {
-		T* t = (T*)vbeat::v_malloc(n * sizeof(T));
-		std::cout << "used vbeat_allocator to allocate at address " << t << " (+)" << std::endl;
-		return t;
-	}
-
-	void deallocate(void* p, size_type) {
-		if (p) {
-			vbeat::v_free(p);
-			std::cout << "used vbeat_allocator to deallocate at address " << p << " (-)" << std::endl;
+		pointer allocate(size_type n, const void * = 0) {
+			T* t = (T*)vbeat::v_malloc(n * sizeof(T));
+			return t;
 		}
-	}
 
-	pointer address(reference x) const {
-		return &x;
-	}
+		void deallocate(void* p, size_type) {
+			if (p) {
+				vbeat::v_free(p);
+			}
+		}
 
-	const_pointer address(const_reference x) const {
-		return &x;
-	}
+		pointer address(reference x) const {
+			return &x;
+		}
 
-	vbeat_allocator<T>& operator=(const vbeat_allocator&) {
-		return *this;
-	}
+		const_pointer address(const_reference x) const {
+			return &x;
+		}
 
-	void construct(pointer p, const T& val) {
-		new ((T*) p) T(val);
-	}
-	void destroy(pointer p) {
-		p->~T();
-	}
+		v_allocator<T>& operator=(const v_allocator&) {
+			return *this;
+		}
 
-	size_type max_size() const {
-		return size_t(-1);
-	}
+		void construct(pointer p, const T& val) {
+			new ((T*) p) T(val);
+		}
+		void destroy(pointer p) {
+			p->~T();
+		}
 
-	template <class U>
-	struct rebind {
-		typedef vbeat_allocator<U> other;
+		size_type max_size() const {
+			return size_t(-1);
+		}
+
+		template <class U>
+		struct rebind {
+			typedef v_allocator<U> other;
+		};
+
+		template <class U>
+		v_allocator(const v_allocator<U>&) {}
+
+		template <class U>
+		v_allocator& operator=(const v_allocator<U>&) {
+			return *this;
+		}
 	};
-
-	template <class U>
-	vbeat_allocator(const vbeat_allocator<U>&) {}
-
-	template <class U>
-	vbeat_allocator& operator=(const vbeat_allocator<U>&) {
-		return *this;
-	}
-};
-
-void* operator new(size_t sz);
-void operator delete(void* ptr) VBEAT_NOEXCEPT;
+}
