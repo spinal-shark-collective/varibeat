@@ -4,7 +4,7 @@
 #include <bgfx/bgfxplatform.h>
 
 #include "vbeat.hpp"
-#include "video.hpp"
+#include "window.hpp"
 
 using namespace vbeat;
 

@@ -7,12 +7,11 @@
 
 #include "vbeat.hpp"
 #include "fs.hpp"
-#include "video.hpp"
-#include "mesh.hpp"
+#include "window.hpp"
 #include "math.hpp"
-#include "bitmap_font.hpp"
-#include "texture.hpp"
-#include "sprite_batch.hpp"
+#include "graphics/bitmap_font.hpp"
+#include "graphics/texture.hpp"
+#include "graphics/sprite_batch.hpp"
 
 using namespace vbeat;
 
@@ -258,7 +257,7 @@ int main(int, char **argv) {
 		gs.screens.pop();
 	}
 
-	video::unload_textures();
+	graphics::unload_textures();
 
 	video::close();
 

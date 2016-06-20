@@ -79,14 +79,10 @@ project "Varibeat" do
 	}
 
 	configuration {}
-	vpaths {
-		["Headers"] = { "**.h", "**.hpp" },
-		["Sources"] = { "**.c", "**.cpp" }
-	}
 	files {
 		path.join(EXTERN_DIR, "lodepng/lodepng.cpp"),
-		path.join(VBEAT_DIR, "*.cpp"),
-		path.join(VBEAT_DIR, "*.hpp")
+		path.join(VBEAT_DIR, "**.cpp"),
+		path.join(VBEAT_DIR, "**.hpp")
 	}
 	includedirs {
 		VBEAT_DIR,

@@ -4,7 +4,7 @@
 #include "texture.hpp"
 
 namespace vbeat {
-namespace video {
+namespace graphics {
 
 struct vertex_t {
 	float x, y;
@@ -13,7 +13,7 @@ struct vertex_t {
 
 struct sprite_batch_t {
 	bool dirty;
-	video::texture_t *texture;
+	texture_t *texture;
 
 	std::vector<vertex_t> vertices;
 	std::vector<uint16_t> indices;
@@ -21,7 +21,7 @@ struct sprite_batch_t {
 	bgfx::DynamicVertexBufferHandle vbo;
 	bgfx::DynamicIndexBufferHandle  ibo;
 
-	sprite_batch_t(video::texture_t *_texture);
+	sprite_batch_t(texture_t *_texture);
 	virtual ~sprite_batch_t();
 
 	void add(const std::vector<vertex_t> &_vertices, const std::vector<uint16_t> &_indices);
@@ -30,5 +30,5 @@ struct sprite_batch_t {
 	void clear();
 };
 
-} // video
+} // graphics
 } // vbeat

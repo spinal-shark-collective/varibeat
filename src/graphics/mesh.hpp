@@ -5,7 +5,7 @@
 #include <string>
 
 namespace vbeat {
-namespace video {
+namespace graphics {
 
 // Note: Implemented in iqm.cpp
 struct mesh {

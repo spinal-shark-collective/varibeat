@@ -4,7 +4,7 @@
 #include <string>
 
 namespace vbeat {
-namespace video {
+namespace graphics {
 
 // TODO: automatic refcounting.
 struct texture_t {
@@ -26,5 +26,5 @@ struct texture_t {
 texture_t *get_texture(const std::string &filename);
 void unload_textures();
 
-} // video
+} // graphics
 } // vbeat

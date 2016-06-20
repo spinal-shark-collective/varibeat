@@ -4,18 +4,18 @@
 #include <bx/fpumath.h>
 
 #include "widgets/widget.hpp"
-#include "sprite_batch.hpp"
+#include "graphics/sprite_batch.hpp"
 #include "fs.hpp"
 
 using namespace vbeat;
 
-void add_sprite(video::sprite_batch_t *batch, float x, float y, float *rect = nullptr) {
+void add_sprite(graphics::sprite_batch_t *batch, float x, float y, float *rect = nullptr) {
 	float umin = 0.f;
 	float vmin = 0.f;
 	float umax = 1.f;
 	float vmax = 1.f;
 
-	video::texture_t *tex = batch->texture;
+	graphics::texture_t *tex = batch->texture;
 
 	float w = (float)tex->w;
 	float h = (float)tex->h;
@@ -35,7 +35,7 @@ void add_sprite(video::sprite_batch_t *batch, float x, float y, float *rect = nu
 	*   |    -\    |
 	*   | B    -\  v
 	*  [3]<-------[2] */
-	std::vector<video::vertex_t> verts = {
+	std::vector<graphics::vertex_t> verts = {
 		{ 0.f + x, 0.f + y,           umin, vmin }, // top left
 		{ (float)w + x, 0.f + y,      umax, vmin }, // top right
 		{ (float)w + x, (float)h + y, umax, vmax }, // bottom right
@@ -52,8 +52,8 @@ static uint32_t good = 200;
 static uint32_t great = 50;
 
 struct notefield_t : widget_t {
-	video::sprite_batch_t *receptors;
-	video::sprite_batch_t *notes;
+	graphics::sprite_batch_t *receptors;
+	graphics::sprite_batch_t *notes;
 	bgfx::UniformHandle sampler;
 	bgfx::ProgramHandle program;
 
@@ -82,8 +82,8 @@ struct notefield_t : widget_t {
 			bgfx::createShader(fs::read_mem("shaders/sprite.fs.bin")),
 			true
 		);
-		receptors = new video::sprite_batch_t(video::get_texture("buttons_oxygen.png"));
-		notes     = new video::sprite_batch_t(video::get_texture("notes_oxygen.png"));
+		receptors = new graphics::sprite_batch_t(graphics::get_texture("buttons_oxygen.png"));
+		notes     = new graphics::sprite_batch_t(graphics::get_texture("notes_oxygen.png"));
 
 		static float mbutton[] = { 22.f, 2.f, 38.f, 22.f };
 		// static float mbutton[] = { 2.f, 2.f, 22.f, 22.f };

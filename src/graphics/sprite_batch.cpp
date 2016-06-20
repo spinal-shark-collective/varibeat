@@ -1,7 +1,7 @@
 #include "sprite_batch.hpp"
 
 using namespace vbeat;
-using namespace video;
+using namespace graphics;
 
 sprite_batch_t::sprite_batch_t(texture_t *_texture):
 	dirty(true),

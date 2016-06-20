@@ -1,28 +1,28 @@
 #include <map>
-
+#include <cstring>
 #include <SDL2/SDL_assert.h>
-#include <bx/allocator.h>
-#include <iqm.h>
 
 #include "vbeat.hpp"
-#include "mesh.hpp"
 #include "fs.hpp"
+
+#include "graphics/iqm.h"
+#include "graphics/mesh.hpp"
 
 using namespace vbeat;
 
-video::mesh::mesh() :
+graphics::mesh::mesh() :
 	vertices(nullptr),
 	indices(nullptr)
 {}
 
-video::mesh::~mesh() {
+graphics::mesh::~mesh() {
 	if (this->vertices) {
 		bgfx::destroyVertexBuffer(this->vbo);
-		bx::free(vbeat::get_allocator(), this->vertices);
+		v_free(this->vertices);
 	}
 	if (this->indices) {
 		bgfx::destroyIndexBuffer(this->ibo);
-		bx::free(vbeat::get_allocator(), this->indices);
+		v_free(this->indices);
 	}
 }
 
@@ -62,7 +62,7 @@ void read_anims(std::vector<uint8_t> &data, iqmheader *header) {
 	}
 }
 
-bool video::read_iqm(video::mesh &mesh, const std::string &filename, bool read_anims) {
+bool graphics::read_iqm(graphics::mesh &mesh, const std::string &filename, bool read_anims) {
 	std::vector<uint8_t> data;
 	fs::read_vector(data, filename);
 
@@ -102,7 +102,7 @@ bool video::read_iqm(video::mesh &mesh, const std::string &filename, bool read_a
 	* attributes, because we can't really guarantee anything exists first. */
 	size_t stride = vertex_format.getStride();
 	size_t size = vertex_format.getSize(header->num_vertexes);
-	uint8_t *vertices = (uint8_t*)bx::alloc(vbeat::get_allocator(), size);
+	uint8_t *vertices = (uint8_t*)v_malloc(size);
 	for (auto &p : va_map) {
 		bgfx::Attrib::Enum attr = p.first;
 		iqmvertexarray va = p.second;
@@ -124,7 +124,7 @@ bool video::read_iqm(video::mesh &mesh, const std::string &filename, bool read_a
 	* since it involves converting from uint to ushort). */
 	iqmtriangle *triangles = (iqmtriangle*)&data[header->ofs_triangles];
 	uint16_t indices_size = header->num_triangles * sizeof(uint16_t) * 3;
-	uint16_t *indices = (uint16_t*)bx::alloc(vbeat::get_allocator(), indices_size);
+	uint16_t *indices = (uint16_t*)v_malloc(indices_size);
 
 	for (unsigned int i = 0; i < header->num_triangles; i++) {
 		indices[i * 3 + 0] = triangles[i].vertex[0];

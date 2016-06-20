@@ -198,7 +198,7 @@ bool bitmap_font_t::load(std::string fontfile) {
 		std::string path = fontfile.substr(0, fontfile.find_last_of("/"));
 		texture_path[i] = path + "/" + texture_path[i];
 
-		this->texture = video::get_texture(texture_path[i]);
+		this->texture = graphics::get_texture(texture_path[i]);
 		this->texture->refs++;
 
 		// TODO: support n>1 texture maps.

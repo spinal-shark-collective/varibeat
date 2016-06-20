@@ -3,7 +3,7 @@
 #include <bx/fpumath.h>
 
 #include "widgets/widget.hpp"
-#include "bitmap_font.hpp"
+#include "graphics/bitmap_font.hpp"
 #include "fs.hpp"
 
 using namespace vbeat;

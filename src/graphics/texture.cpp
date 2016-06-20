@@ -1,10 +1,8 @@
 #include <map>
-#include <bx/bx.h>
-#include <bx/crtimpl.h>
+#include "vbeat.hpp"
 #include "lodepng.h"
 #include "texture.hpp"
 #include "fs.hpp"
-#include "vbeat.hpp"
 
 void* lodepng_malloc(size_t size) {
 	return vbeat::v_malloc(size);
@@ -21,10 +19,10 @@ void lodepng_free(void* ptr) {
 using namespace vbeat;
 
 namespace {
-	std::map<std::string, video::texture_t*> loaded_textures;
+	std::map<std::string, graphics::texture_t*> loaded_textures;
 }
 
-video::texture_t *video::get_texture(const std::string &filename) {
+graphics::texture_t *graphics::get_texture(const std::string &filename) {
 	texture_t *tex = loaded_textures[filename];
 	if (tex == nullptr) {
 		unsigned w, h;
@@ -43,7 +41,7 @@ video::texture_t *video::get_texture(const std::string &filename) {
 	return tex;
 }
 
-void video::unload_textures() {
+void graphics::unload_textures() {
 	for (auto &t : loaded_textures) {
 		if (t.second->refs > 0) {
 			puts("/!\\ texture has non-zero refcount! /!\\");
