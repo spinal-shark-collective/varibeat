@@ -267,11 +267,11 @@ const bgfx::Memory *fs::read_mem(const std::string &filename, int bytes) {
 	if (bx::open(&file, filename.c_str())) {
 		int32_t _size = (int32_t)bx::getSize(&file);
 		int32_t _read = bytes > 0 ? bytes : _size;
-		void *buf = bx::alloc(vbeat::get_allocator(), _size);
-		bx::read(&file, buf, _read);
+		const bgfx::Memory* buf = bgfx::alloc(_size);
+		bx::read(&file, buf->data, _read);
 		bx::close(&file);
 
-		return bgfx::makeRef(buf, _size);
+		return buf;
 	}
 	return bgfx::makeRef(NULL, 0);
 }
