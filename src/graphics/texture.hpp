@@ -14,7 +14,7 @@ struct texture_t {
 		h(_h),
 		refs(0)
 	{}
-	~texture_t() {
+	virtual ~texture_t() {
 		puts("deleting texture");
 		bgfx::destroyTexture(this->tex);
 	}

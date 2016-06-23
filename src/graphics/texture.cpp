@@ -31,7 +31,7 @@ graphics::texture_t *graphics::get_texture(const std::string &filename) {
 		fs::read_vector(file_data, filename);
 		unsigned err = lodepng::decode(pixels, w, h, file_data);
 		if (err) {
-			printf("fuck\n");
+			puts("fuck");
 			return nullptr;
 		}
 
@@ -43,9 +43,12 @@ graphics::texture_t *graphics::get_texture(const std::string &filename) {
 
 void graphics::unload_textures() {
 	for (auto &t : loaded_textures) {
-		if (t.second->refs > 0) {
-			puts("/!\\ texture has non-zero refcount! /!\\");
+		if (t.second != nullptr) {
+			if (t.second->refs > 0) {
+				puts("/!\\ texture has non-zero refcount! /!\\");
+			}
+			delete t.second;
+			loaded_textures.erase(t.first);
 		}
-		delete t.second;
 	}
 }
