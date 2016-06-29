@@ -1,6 +1,16 @@
 BASE_DIR   = path.getabsolute("..")
 EXTERN_DIR = path.join(BASE_DIR, "extern")
 
+dofile "../extern/bx/scripts/toolchain.lua"
+if _ACTION == "gmake" and _OPTIONS["gcc"] == nil then
+	if os.is "windows" then
+		_OPTIONS["gcc"] = "mingw-gcc"
+	else
+		_OPTIONS["gcc"] = "linux-gcc"
+	end
+	print("Warning: GCC flavor not specified. Defaulting to " .. _OPTIONS["gcc"])
+end
+
 solution "Varibeat" do
 	configurations {
 		"Debug",
@@ -8,8 +18,7 @@ solution "Varibeat" do
 	}
 	platforms { "Native", "x32", "x64" }
 	startproject "Varibeat"
-	targetdir(path.join(BASE_DIR, "bin"))
-	objdir(path.join(BASE_DIR, "obj"))
+	toolchain(path.join(BASE_DIR, "bin"), path.join(BASE_DIR, "obj"))
 
 	configuration { "Debug" }
 	flags { "Symbols" }
