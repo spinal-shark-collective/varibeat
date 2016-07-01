@@ -81,6 +81,7 @@ project "Varibeat" do
 	}
 	configuration {"gmake"}
 	buildoptions {
+		"-fexceptions",
 		"-std=c++11",
 		"-fno-strict-aliasing",
 		"-Wall",

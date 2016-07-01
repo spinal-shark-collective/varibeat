@@ -42,8 +42,10 @@ project "BGFX" do
 		path.join(BGFX_SRC_DIR, "shader_spirv.cpp"),
 		path.join(BGFX_SRC_DIR, "vertexdecl.cpp")
 	}
-	defines {
-		"BGFX_CONFIG_RENDERER_OPENGL=33"
+	configuration {"android*"}
+	links {
+		"EGL",
+		"GLESv2"
 	}
 	configuration {"Debug"}
 	if _OPTIONS["bgfx-debug"] then
