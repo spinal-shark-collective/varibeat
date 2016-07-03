@@ -20,6 +20,13 @@ solution "Varibeat" do
 	startproject "Varibeat"
 	toolchain(path.join(BASE_DIR, "bin"), path.join(BASE_DIR, "obj"))
 
+	configuration { "Release" }
+	flags {
+		"NoBufferSecurityCheck",
+		"EnableSSE2",
+		"OptimizeSpeed"
+	}
+
 	configuration { "Debug" }
 	flags { "Symbols" }
 
