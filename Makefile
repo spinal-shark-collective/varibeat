@@ -24,6 +24,7 @@ tools:
 	@+make -C extern/bgfx texturev
 
 	@# Bad assumption: linux64_gcc target.
+	@if [ ! -d bin ]; then mkdir bin; fi
 	cp extern/bgfx/.build/linux64_gcc/bin/shadercRelease bin/shaderc
 	cp extern/bgfx/.build/linux64_gcc/bin/texturecRelease bin/texturec
 	cp extern/bgfx/.build/linux64_gcc/bin/texturevRelease bin/texturev
