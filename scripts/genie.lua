@@ -1,7 +1,7 @@
 BASE_DIR   = path.getabsolute("..")
 EXTERN_DIR = path.join(BASE_DIR, "extern")
 
-dofile "../extern/bx/scripts/toolchain.lua"
+dofile "toolchain.lua"
 if _ACTION == "gmake" and _OPTIONS["gcc"] == nil then
 	if os.is "windows" then
 		_OPTIONS["gcc"] = "mingw-gcc"
@@ -18,7 +18,17 @@ solution "Varibeat" do
 	}
 	platforms { "Native", "x32", "x64" }
 	startproject "Varibeat"
-	toolchain(path.join(BASE_DIR, "bin"), path.join(BASE_DIR, "obj"))
+	toolchain(
+		path.join(BASE_DIR, "bin"),
+		path.join(BASE_DIR, "obj"),
+		path.join(BASE_DIR, "bin")
+	)
+
+	-- force our bins into bin/
+	targetdir(path.join(BASE_DIR, "bin"))
+
+	-- and the makefiles into build/ so we can make -C build
+	location(path.join(BASE_DIR, "build"))
 
 	configuration { "Release" }
 	flags {
@@ -58,6 +68,8 @@ project "Varibeat" do
 		targetname "varibeat"
 	end
 	local VBEAT_DIR = path.join(BASE_DIR, "src")
+
+	strip()
 
 	links {
 		"SDL2",

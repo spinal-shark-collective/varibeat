@@ -2,10 +2,10 @@ SHADER_DIR      ?= assets/shaders
 SHADER_PLATFORM ?= linux
 
 all: shaders
-	@+ make -C scripts all
+	@+ make -C build all
 
 clean:
-	make -C scripts clean
+	make -C build clean
 
 shaders:
 	@# Generic sprite VS+FS
@@ -27,6 +27,7 @@ shaders:
 		--platform $(SHADER_PLATFORM)
 
 run: all
-	@exec ./bin/varibeat
+	@if [ -f ./bin/varibeat ];    then exec ./bin/varibeat; \
+	elif [ -f ./bin/varibeat_d ]; then exec ./bin/varibeat_d; fi
 
 .PHONY: all clean shaders run
