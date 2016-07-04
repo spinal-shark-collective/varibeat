@@ -25,10 +25,11 @@ project "PhysFS" do
 		path.join(PHYSFS_DIR, "platform_windows.c"),
 		path.join(PHYSFS_DIR, "platform_winrt.cpp")
 	}
-	configuration {"linux"}
 	defines {
-		"PHYSFS_PLATFORM_POSIX"
+		"__EMX__=0"
 	}
+	configuration {"linux"}
+	defines {"PHYSFS_PLATFORM_POSIX"}
 	configuration {"windows"}
 	defines {"PHYSFS_PLATFORM_WINDOWS"}
 	configuration {"vs*"}

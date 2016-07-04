@@ -1,6 +1,6 @@
 local BX_DIR = path.getabsolute("../extern/bx")
 
-function toolchain(_buildDir, _objDir, _libDir)
+function toolchain(_buildDir, _objDir)
 	newoption {
 		trigger = "gcc",
 		value = "GCC",
@@ -205,7 +205,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 		targetdir (path.join(_buildDir, "win32_" .. _ACTION, "bin"))
 		objdir (path.join(_objDir, "win32_" .. _ACTION, "obj"))
 		libdirs {
-			path.join(_libDir, "lib/win32_" .. _ACTION),
+			path.join(_buildDir, "lib/win32_" .. _ACTION),
 		}
 
 	configuration { "x64", "vs*" }
@@ -213,7 +213,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 		targetdir (path.join(_buildDir, "win64_" .. _ACTION, "bin"))
 		objdir (path.join(_objDir, "win64_" .. _ACTION, "obj"))
 		libdirs {
-			path.join(_libDir, "lib/win64_" .. _ACTION),
+			path.join(_buildDir, "lib/win64_" .. _ACTION),
 		}
 
 	configuration { "ARM", "vs*" }
@@ -269,7 +269,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 		targetdir (path.join(_buildDir, "win32_mingw-gcc/bin"))
 		objdir (path.join(_objDir, "win32_mingw-gcc/obj"))
 		libdirs {
-			path.join(_libDir, "lib/win32_mingw-gcc"),
+			path.join(_buildDir, "lib/win32_mingw-gcc"),
 		}
 		buildoptions {
 			"-m32",
@@ -280,7 +280,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 		targetdir (path.join(_buildDir, "win64_mingw-gcc/bin"))
 		objdir (path.join(_objDir, "win64_mingw-gcc/obj"))
 		libdirs {
-			path.join(_libDir, "lib/win64_mingw-gcc"),
+			path.join(_buildDir, "lib/win64_mingw-gcc"),
 		}
 		buildoptions { "-m64" }
 
@@ -299,7 +299,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 		targetdir (path.join(_buildDir, "win32_mingw-clang/bin"))
 		objdir (path.join(_objDir, "win32_mingw-clang/obj"))
 		libdirs {
-			path.join(_libDir, "lib/win32_mingw-clang"),
+			path.join(_buildDir, "lib/win32_mingw-clang"),
 		}
 		buildoptions { "-m32" }
 
@@ -307,7 +307,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 		targetdir (path.join(_buildDir, "win64_mingw-clang/bin"))
 		objdir (path.join(_objDir, "win64_mingw-clang/obj"))
 		libdirs {
-			path.join(_libDir, "lib/win64_mingw-clang"),
+			path.join(_buildDir, "lib/win64_mingw-clang"),
 		}
 		buildoptions { "-m64" }
 
@@ -351,7 +351,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 	configuration { "linux-gcc*", "x32" }
 		targetdir (path.join(_buildDir, "linux32_gcc/bin"))
 		objdir (path.join(_objDir, "linux32_gcc/obj"))
-		libdirs { path.join(_libDir, "lib/linux32_gcc") }
+		libdirs { path.join(_buildDir, "lib/linux32_gcc") }
 		buildoptions {
 			"-m32",
 		}
@@ -359,7 +359,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 	configuration { "linux-gcc*", "x64" }
 		targetdir (path.join(_buildDir, "linux64_gcc/bin"))
 		objdir (path.join(_objDir, "linux64_gcc/obj"))
-		libdirs { path.join(_libDir, "lib/linux64_gcc") }
+		libdirs { path.join(_buildDir, "lib/linux64_gcc") }
 		buildoptions {
 			"-m64",
 		}
@@ -367,7 +367,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 	configuration { "linux-clang*", "x32" }
 		targetdir (path.join(_buildDir, "linux32_clang/bin"))
 		objdir (path.join(_objDir, "linux32_clang/obj"))
-		libdirs { path.join(_libDir, "lib/linux32_clang") }
+		libdirs { path.join(_buildDir, "lib/linux32_clang") }
 		buildoptions {
 			"-m32",
 		}
@@ -375,7 +375,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 	configuration { "linux-clang*", "x64" }
 		targetdir (path.join(_buildDir, "linux64_clang/bin"))
 		objdir (path.join(_objDir, "linux64_clang/obj"))
-		libdirs { path.join(_libDir, "lib/linux64_clang") }
+		libdirs { path.join(_buildDir, "lib/linux64_clang") }
 		buildoptions {
 			"-m64",
 		}
@@ -383,7 +383,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 	configuration { "linux-mips-gcc" }
 		targetdir (path.join(_buildDir, "linux32_mips_gcc/bin"))
 		objdir (path.join(_objDir, "linux32_mips_gcc/obj"))
-		libdirs { path.join(_libDir, "lib/linux32_mips_gcc") }
+		libdirs { path.join(_buildDir, "lib/linux32_mips_gcc") }
 		buildoptions {
 			"-Wunused-value",
 			"-Wundef",
@@ -402,7 +402,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 	configuration { "linux-arm-gcc" }
 		targetdir (path.join(_buildDir, "linux32_arm_gcc/bin"))
 		objdir (path.join(_objDir, "linux32_arm_gcc/obj"))
-		libdirs { path.join(_libDir, "lib/linux32_arm_gcc") }
+		libdirs { path.join(_buildDir, "lib/linux32_arm_gcc") }
 		buildoptions {
 			"-Wunused-value",
 			"-Wundef",
@@ -465,7 +465,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 		targetdir (path.join(_buildDir, "android-arm/bin"))
 		objdir (path.join(_objDir, "android-arm/obj"))
 		libdirs {
-			path.join(_libDir, "lib/android-arm"),
+			path.join(_buildDir, "lib/android-arm"),
 			"$(ANDROID_NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/4.9/libs/armeabi-v7a",
 		}
 		includedirs {
@@ -493,7 +493,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 		targetdir (path.join(_buildDir, "android-mips/bin"))
 		objdir (path.join(_objDir, "android-mips/obj"))
 		libdirs {
-			path.join(_libDir, "lib/android-mips"),
+			path.join(_buildDir, "lib/android-mips"),
 			"$(ANDROID_NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/4.8/libs/mips",
 		}
 		includedirs {
@@ -514,7 +514,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 		targetdir (path.join(_buildDir, "android-x86/bin"))
 		objdir (path.join(_objDir, "android-x86/obj"))
 		libdirs {
-			path.join(_libDir, "lib/android-x86"),
+			path.join(_buildDir, "lib/android-x86"),
 			"$(ANDROID_NDK_ROOT)/sources/cxx-stl/gnu-libstdc++/4.8/libs/x86",
 		}
 		includedirs {
@@ -540,7 +540,7 @@ function toolchain(_buildDir, _objDir, _libDir)
 		targetdir (path.join(_buildDir, "rpi/bin"))
 		objdir (path.join(_objDir, "rpi/obj"))
 		libdirs {
-			path.join(_libDir, "lib/rpi"),
+			path.join(_buildDir, "lib/rpi"),
 			"/opt/vc/lib",
 		}
 		defines {
