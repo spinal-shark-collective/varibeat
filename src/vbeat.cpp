@@ -1,13 +1,15 @@
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_syswm.h>
 #include <bx/bx.h>
 #include <bx/crtimpl.h>
 #include <bx/fpumath.h>
+#include <bgfx/bgfxplatform.h>
 
 #include <stack>
+#include <string>
 
 #include "vbeat.hpp"
 #include "fs.hpp"
-#include "window.hpp"
 #include "math.hpp"
 #include "graphics/bitmap_font.hpp"
 #include "graphics/texture.hpp"
@@ -58,6 +60,44 @@ void* operator new(size_t sz) {
 void operator delete(void* ptr) VBEAT_NOEXCEPT
 {
 	vbeat::v_free(ptr);
+}
+
+using namespace vbeat;
+
+namespace video {
+	SDL_Window *wnd = nullptr;
+	bool open(int w, int h, std::string title) {
+		printf("Video: Initializing...\n");
+
+		SDL_InitSubSystem(SDL_INIT_VIDEO);
+
+		wnd = SDL_CreateWindow(
+			title.c_str(),
+			SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+			w, h,
+			SDL_WINDOW_OPENGL
+		);
+		bgfx::sdlSetWindow(wnd);
+
+		if (!bgfx::init(
+			bgfx::RendererType::OpenGL,
+			BGFX_PCI_ID_NONE, 0, NULL,
+			vbeat::get_allocator()
+		)) {
+			printf("Video: Unable to obtain rendering context.\n");
+			return false;
+		}
+
+		printf("Video: Ready.\n");
+
+		return true;
+	}
+
+	void close() {
+		bgfx::shutdown();
+		SDL_DestroyWindow(wnd);
+		SDL_QuitSubSystem(SDL_INIT_VIDEO);
+	}
 }
 
 #include "widgets/widget.hpp"
